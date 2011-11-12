@@ -11,7 +11,8 @@
 #include "Actor.h"
 #include "Closures.h"
 #include "ThreadPool.h"
-
+#include <stack>
+#include <algorithm>
 
 using namespace std;
 
@@ -63,24 +64,45 @@ class UnaActor : public Acting::Actor{
 public:
     virtual void act(){
         std::printf("Hello from UnaActor [ID %d]\n",this->GetId());
+        for(int i =0;i<100;i++){
+            std::printf("Hello from UnaActor [ID %d]\n",this->GetId());
+            //sleep(1);
+        }
     }
 };
+
 int main() {
 
     
-    
-    Acting::ThreadPool<2>::InitPool();
 
+    const int thread_count =6;
+    Acting::ThreadPool<thread_count>::InitPool();
+
+    stack<Acting::Actor*> to_free;
     //////////////////////////////////////////////////
 
     for(int i=0;i<10;i++){
         Acting::Actor *a = new MyActor();
-        Acting::ThreadPool<2>::AddItem(a);
+        Acting::Actor *b = new AnotherActor();
+        Acting::Actor *c = new UnaActor();
+
+        Acting::ThreadPool<thread_count>::AddItem(a);
+        Acting::ThreadPool<thread_count>::AddItem(b);
+        Acting::ThreadPool<thread_count>::AddItem(c);
+
+        to_free.push(a);
+        to_free.push(b);
+        to_free.push(c);
+        
     }
-    Acting::ThreadPool<2>::AddItem(new AnotherActor());
-    Acting::ThreadPool<2>::AddItem(new UnaActor());
     //////////////////////////////////////////////////
-    Acting::ThreadPool<2>::FinalizePool();
+    Acting::ThreadPool<thread_count>::FinalizePool();
+
+    while(!to_free.empty()){
+        Acting::Actor* c = to_free.top();
+        to_free.pop();
+        delete c;
+    }
     return 0;
 }
 

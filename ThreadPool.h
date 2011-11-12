@@ -51,6 +51,9 @@ namespace Acting{
          */
         static int __elected_thread;
 
+        /**
+         */
+        static inline int ElectThread();
         /*
          *Un mutex pour stdout
          */
@@ -86,6 +89,16 @@ template <unsigned int THREAD_COUNT> Threading::Mutex_t                    Actin
 template <unsigned int THREAD_COUNT> Threading::Mutex_t                    Acting::ThreadPool<THREAD_COUNT>::__mutex_map;
 template <unsigned int THREAD_COUNT> Threading::Vcondition                 Acting::ThreadPool<THREAD_COUNT>::__condition_queue_not_empty[THREAD_COUNT];
 template <unsigned int THREAD_COUNT> Threading::Mutex_t                    Acting::ThreadPool<THREAD_COUNT>::__mutex_condition_queue_not_empty[THREAD_COUNT];
+
+
+
+
+
+
+/*Methode doit être parametrée*/
+template <unsigned int THREAD_COUNT> inline int Acting::ThreadPool<THREAD_COUNT>::ElectThread(){
+   return (__elected_thread+1) % THREAD_COUNT;
+}
 
 
 template <unsigned int THREAD_COUNT> int Acting::ThreadPool<THREAD_COUNT>::InitPool(){
@@ -125,11 +138,14 @@ template <unsigned int THREAD_COUNT> int Acting::ThreadPool<THREAD_COUNT>::Final
 }
 
 
+
 template <unsigned int THREAD_COUNT> int Acting::ThreadPool<THREAD_COUNT>::AddItem(Actor* a){
     task_t new_task;
     new_task.__candidat = a;
     new_task.actor_id   = a->GetId();
-    
+
+    //ici l'election se fait au tourniquet
+    //lui preferer une méthode générique, FIFO ..
     __elected_thread= (__elected_thread+1) % THREAD_COUNT;
 
     //Ici il faudra choisir sur quel thread placer le job
@@ -159,11 +175,16 @@ template <unsigned int THREAD_COUNT> int Acting::ThreadPool<THREAD_COUNT>::Loop(
         
         Threading::Mutex::lock(&__mutex_condition_queue_not_empty[tid]);
         while(__actors[tid].empty()){
+
+            //Essayer ici d'aller voler du travail chez une autre thread
+            //Si pas de boulot alors se mettre se mettre en attente
+            
             Threading::Condition::wait(&__mutex_condition_queue_not_empty[tid],&__condition_queue_not_empty[tid]);
 #ifdef DEBUG
             //std::printf("Hello from thread %d executing actor : %d on queue %d\n",Threading::get_thread_id(),t.__candidat->GetId(),tid);
 #endif
         }
+        //Le thread va consommer sa file des travaux
         while(!__actors[tid].empty()){
                     Threading::Mutex::lock(&__mutex_queueus[tid]);
                     task_t t = __actors[tid].front();
@@ -172,7 +193,6 @@ template <unsigned int THREAD_COUNT> int Acting::ThreadPool<THREAD_COUNT>::Loop(
 
                     //Execute le code de l'acteur
                     t.__candidat->act();
-                    //std::printf("Hello from thread %d executing actor : %d on queue %d\n",Threading::get_thread_id(),t.__candidat->GetId(),tid);
                 }
         Threading::Mutex::unlock(&__mutex_condition_queue_not_empty[tid]);
     }
