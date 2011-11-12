@@ -55,11 +55,11 @@ LDLIBSOPTIONS=
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-Release.mk dist/Release/Cygwin_4.x-Windows/actor__.exe
+	"${MAKE}"  -f nbproject/Makefile-Release.mk dist/Release/Cygwin_4.x-Windows/actor-cpp.exe
 
-dist/Release/Cygwin_4.x-Windows/actor__.exe: ${OBJECTFILES}
+dist/Release/Cygwin_4.x-Windows/actor-cpp.exe: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/Cygwin_4.x-Windows
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/actor__ ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/actor-cpp ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/Thread.o: Thread.cpp 
 	${MKDIR} -p ${OBJECTDIR}
@@ -77,7 +77,7 @@ ${OBJECTDIR}/main.o: main.cpp
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Release
-	${RM} dist/Release/Cygwin_4.x-Windows/actor__.exe
+	${RM} dist/Release/Cygwin_4.x-Windows/actor-cpp.exe
 
 # Subprojects
 .clean-subprojects:
