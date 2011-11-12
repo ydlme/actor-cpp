@@ -10,6 +10,13 @@
 
 #include "Thread.h"
 #include "Closures.h"
+#include <list>
+#include <string.h>
+#include <cassert>
+#include <string>
+
+
+using namespace std;
 
 namespace Acting{
 
@@ -30,6 +37,9 @@ namespace Acting{
      */
     struct message_t{
         message_tag tag;
+        /**
+         * données contigues
+         */
         Memory      data;
         Id          sender;
         Id          receiver;
@@ -48,33 +58,101 @@ namespace Acting{
 
 
     /**
+     * Toute cette classe doit être thread safe
+     * Pour la simple raison que des acteurs peuvent créer d'autres acteurs
+     * Dans ce cas, les multiples threads doivent se synchroniser sur certaines
+     * données static de la class Actor
      */
     class Actor {
         
     private:
         Id actor_id;
-
+        string actor_name;
         Memory actor_stack;
-        queue<message_t> actor_message_box;
-        Threading::Thread actor_thread;
-
+        list<message_t> actor_message_box;
         static Id compteur;
 
     public:
         Actor();
         Actor(const Actor& orig);
-
+        
         /**
          * code exécuté par l'acteur
          */
         virtual void act()=0;
 
+        
         /**
-         * 
+         * L'identifiant de l'acteur
          * @return
          */
         Id GetId();
 
+        /**
+         *
+         * @param name
+         */
+        void SetName(const string name){
+            this->actor_name=name;
+        }
+
+
+        /**
+         * 
+         * @return
+         */
+        string  GetName(){
+            return this->actor_name;
+        }
+        /**
+         * La taille de la file des messages
+         * @return
+         */
+        int GetMessageCount(){
+            return this->actor_message_box.size();
+        }
+
+        /**
+         * La méthode doit être estampillé
+         */
+        template <typename T> int send(Actor* dest,T* message){
+
+            printf("%s ----> %s [%d octets]\n",this->GetName().c_str(),dest->GetName().c_str(),sizeof(*message));
+            //Ici encapsuler le message dans un paquet
+            message_t pqt;
+            pqt.data = (Memory) message;
+            pqt.receiver=dest->GetId();
+            pqt.sender  =this->GetId();
+            pqt.tag     =Actor::compteur++;
+
+            dest->actor_message_box.push_front(pqt);
+            return pqt.tag;
+        }
+
+        /**
+         * Attention au thread safe
+         * @param tag
+         * @return
+         */
+        template<typename T> T* receive(int tag){
+            std::cout << "Receiving message tag: "<< tag << std::endl;
+            for(list<message_t>::iterator it=actor_message_box.begin();it!=actor_message_box.end();it++){
+                
+                if(it->tag==tag){
+                    printf("Message tag : %d == %d, sizof data: %d\n",it->tag,tag,sizeof(* ((T*)(it->data))));
+                    //actor_message_box.remove(m);
+
+                    void* data = malloc(sizeof(* ((T*)(it->data))));
+                    void* ret  = memcpy(data,it->data,sizeof((* ((T*)it->data))));
+                    assert(ret!=NULL);
+                    assert(data!=NULL);
+                    return (T*) data;
+                    
+                }
+            }
+            assert(0);
+            return NULL;
+        }
         /**
          * Executer une portion de code
          * @param fun : code à exécuter
@@ -115,6 +193,7 @@ namespace Acting{
     Actor::Actor(){
         compteur++;
         this->actor_id = compteur;
+        this->SetName(string(""));
     }
 
     /**
@@ -135,35 +214,6 @@ namespace Acting{
 
     Id Actor::GetId(){
         return this->actor_id;
-    }
-
-    /**
-     * Sending a message of type T from src to dest
-     * @param src : Actor who sends the message
-     * @param dest: Actor who will receive the message
-     * @param message: The message to transmit
-     * @return
-     */
-     template <typename T> int send(Actor& src,Actor& dest,T& message){
-        std::cout << "Sending a message from a bottle"<<std::endl;
-
-        //Ici encapsuler le message dans un paquet
-        message_t pqt;
-        pqt.data = NULL;
-        pqt.receiver=-1;
-        pqt.sender  =-1;
-        pqt.tag     =-1;
-    }
-
-    /**
-     * Receiving a message of type T from src
-     * @param dest
-     * @param src
-     * @param message
-     * @return
-     */
-    template <typename T> int receive(Actor& dest, Actor& src, T& message){
-        std::cout << "Receiving message from a bottle"<<std::endl;
     }
 }
 
