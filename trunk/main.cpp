@@ -13,6 +13,7 @@
 #include "ThreadPool.h"
 #include <stack>
 #include <algorithm>
+#include <assert.h>
 
 using namespace std;
 
@@ -65,11 +66,19 @@ public:
     virtual void act(){
         std::printf("Hello from UnaActor [ID %d]\n",this->GetId());
         for(int i =0;i<100;i++){
-            std::printf("Hello from UnaActor [ID %d]\n",this->GetId());
+            //std::printf("Hello from UnaActor [ID %d]\n",this->GetId());
             //sleep(1);
         }
     }
 };
+
+
+typedef struct {
+    int x;
+    int y;
+    float z;
+    float *w;
+} data_t;
 
 int main() {
 
@@ -81,10 +90,13 @@ int main() {
     stack<Acting::Actor*> to_free;
     //////////////////////////////////////////////////
 
-    for(int i=0;i<10;i++){
         Acting::Actor *a = new MyActor();
         Acting::Actor *b = new AnotherActor();
         Acting::Actor *c = new UnaActor();
+
+        a->SetName("a");
+        b->SetName("b");
+        c->SetName("c");
 
         Acting::ThreadPool<thread_count>::AddItem(a);
         Acting::ThreadPool<thread_count>::AddItem(b);
@@ -93,8 +105,36 @@ int main() {
         to_free.push(a);
         to_free.push(b);
         to_free.push(c);
+
+        int msg =11;
+        float msg_2 =1.09;
         
-    }
+        int tag_msg=a->send<int>(b,&msg);
+        int tag_msg2=a->send<float>(b,&msg_2);
+
+
+
+        cout<<"Message box of actor "<<b->GetId()<<" Size:"<<b->GetMessageCount()<<endl;
+        int*   recv= b->receive<int>(tag_msg);
+        float* recv2=b->receive<float>(tag_msg2);
+
+
+        data_t d;
+        d.x = 102;
+        d.y = 100;
+        d.z = 103;
+        d.w = NULL;
+
+        int d_tag = c->send<data_t>(a,&d);
+        data_t* res=a->receive<data_t>(d_tag);
+
+        
+        assert(res->x==102);
+        assert(res->w==0);
+
+        printf("recv1 :%d recv2: %f\n",*recv,*recv2);
+        cout<<"Message box of actor "<<b->GetId()<<" Size:"<<b->GetMessageCount()<<endl;
+    
     //////////////////////////////////////////////////
     Acting::ThreadPool<thread_count>::FinalizePool();
 
