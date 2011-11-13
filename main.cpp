@@ -73,6 +73,58 @@ public:
 };
 
 
+class Ping : public Acting::Actor{
+private:
+    Acting::Actor* pong;
+    int message;
+public:
+
+    void SetPong(Acting::Actor* pong){
+        this->pong = pong;
+    }
+    
+    Ping():Actor(){
+        this->message = this->GetId();
+        this->pong = pong;
+    }
+
+    virtual void act(){
+       int tag;
+       for(int i=0;i<100;i++){
+           
+           message++;
+           tag=this->send<int>(this->pong,&message,0);
+           sleep(1);
+           this->receive<int>(pong,0,&message);
+           
+           printf("%s --%d--> %s\n",this->GetName().c_str(),message,this->pong->GetName().c_str());
+            
+       }
+    }
+};
+
+
+class Node : public Acting::Actor{
+private:
+    Acting::Actor* successeur;
+    Acting::Actor* predeccesseur;
+   
+public:
+    Node(Acting::Actor* successeur,Acting::Actor* predeccesseur):Actor()
+    {
+        this->successeur=successeur;
+        this->predeccesseur=predeccesseur;
+    }
+
+
+    virtual void act(){
+       int message = 100;
+
+        this->send<int>(this->successeur,&message,0);
+        this->receive<int>(this->predeccesseur,0,&message);
+    }
+};
+
 typedef struct {
     int x;
     int y;
@@ -80,69 +132,103 @@ typedef struct {
     float *w;
 } data_t;
 
-int main() {
 
+
+inline void fun(){
     
-
-    const int thread_count =6;
-    Acting::ThreadPool<thread_count>::InitPool();
+    const int thread_count =7;
 
     stack<Acting::Actor*> to_free;
     //////////////////////////////////////////////////
 
-        Acting::Actor *a = new MyActor();
-        Acting::Actor *b = new AnotherActor();
-        Acting::Actor *c = new UnaActor();
+    Acting::Actor *a = new MyActor();
+    Acting::Actor *b = new AnotherActor();
+    Acting::Actor *c = new UnaActor();
 
-        a->SetName("a");
-        b->SetName("b");
-        c->SetName("c");
+    //Mettre une factory ActorFactory
+    a->SetName("a");
+    b->SetName("b");
+    c->SetName("c");
 
-        Acting::ThreadPool<thread_count>::AddItem(a);
-        Acting::ThreadPool<thread_count>::AddItem(b);
-        Acting::ThreadPool<thread_count>::AddItem(c);
+    Acting::ThreadPool<thread_count>::AddItem(a);
+    Acting::ThreadPool<thread_count>::AddItem(b);
+    Acting::ThreadPool<thread_count>::AddItem(c);
 
-        to_free.push(a);
-        to_free.push(b);
-        to_free.push(c);
+    to_free.push(a);
+    to_free.push(b);
+    to_free.push(c);
 
-        int msg =11;
-        float msg_2 =1.09;
-        
-        int tag_msg=a->send<int>(b,&msg);
-        int tag_msg2=a->send<float>(b,&msg_2);
+    int msg =11;
+    float msg_2 =1.09;
 
-
-
-        cout<<"Message box of actor "<<b->GetId()<<" Size:"<<b->GetMessageCount()<<endl;
-        int*   recv= b->receive<int>(tag_msg);
-        float* recv2=b->receive<float>(tag_msg2);
+    //int tag_msg=a->send<int>(b,&msg);
+    //int tag_msg2=a->send<float>(b,&msg_2);
 
 
-        data_t d;
-        d.x = 102;
-        d.y = 100;
-        d.z = 103;
-        d.w = NULL;
 
-        int d_tag = c->send<data_t>(a,&d);
-        data_t* res=a->receive<data_t>(d_tag);
+    cout<<"Message box of actor "<<b->GetId()<<" Size:"<<b->GetMessageCount()<<endl;
+    ///int*   recv= b->receive<int>(tag_msg);
+    //float* recv2=b->receive<float>(tag_msg2);
 
-        
-        assert(res->x==102);
-        assert(res->w==0);
 
-        printf("recv1 :%d recv2: %f\n",*recv,*recv2);
-        cout<<"Message box of actor "<<b->GetId()<<" Size:"<<b->GetMessageCount()<<endl;
+    data_t d;
+    d.x = 102;
+    d.y = 100;
+    d.z = 103;
+    d.w = NULL;
+
+    //int d_tag = c->send<data_t>(a,&d);
+    //data_t* res=a->receive<data_t>(d_tag);
+
+
+    //assert(res->x==102);
+    //assert(res->w==0);
+
+    //printf("recv1 :%d recv2: %f\n",*recv,*recv2);
+    cout<<"Message box of actor "<<b->GetId()<<" Size:"<<b->GetMessageCount()<<endl;
+
+}
+int main() {
+
+    list<data_t> liste;
+    data_t t ;
+    t.x=2;
+
+    liste.push_front(t);
+    //liste.remove(&t);
+    list<data_t>::iterator it = liste.begin();
+    liste.erase(it);
+
+    assert(liste.size() == 0);
+    
+
+
+    const int thread_count =6;
+
+
+    Acting::ThreadPool<thread_count>::InitPool();
+
+    Ping* ping = new Ping();
+    Ping* pong = new Ping();
+
+    ping->SetName(string("PING"));
+    pong->SetName(string("PONG"));
+
+    ping->SetPong(pong);
+    pong->SetPong(ping);
+
+    Acting::ThreadPool<thread_count>::AddItem(ping);
+    Acting::ThreadPool<thread_count>::AddItem(pong);
+
+
+    vector<Node*> nodes;
+    nodes.resize(10);
+
     
     //////////////////////////////////////////////////
     Acting::ThreadPool<thread_count>::FinalizePool();
 
-    while(!to_free.empty()){
-        Acting::Actor* c = to_free.top();
-        to_free.pop();
-        delete c;
-    }
+    
     return 0;
 }
 
