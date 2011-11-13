@@ -1,7 +1,6 @@
 /* 
  * File:   Actor.h
  * Author: Ameziane NAIT ABDELAZIZ
- *
  * Created on 4 novembre 2011, 17:14
  */
 
@@ -66,14 +65,37 @@ namespace Acting{
     class Actor {
         
     private:
+        /**
+         */
         Id actor_id;
+        
+        /**
+         */
         string actor_name;
+
+        /**
+         */
         Memory actor_stack;
-        list<message_t> actor_message_box;
+
+        /**
+         */
+        list<message_t*> actor_message_box;
+
+        /**
+         * 
+         */
         static Id compteur;
 
     public:
+        /**
+         *
+         */
         Actor();
+
+        /**
+         *
+         * @param orig
+         */
         Actor(const Actor& orig);
         
         /**
@@ -104,6 +126,8 @@ namespace Acting{
         string  GetName(){
             return this->actor_name;
         }
+
+        
         /**
          * La taille de la file des messages
          * @return
@@ -112,21 +136,24 @@ namespace Acting{
             return this->actor_message_box.size();
         }
 
+
+        
+
         /**
          * La méthode doit être estampillé
          */
-        template <typename T> int send(Actor* dest,T* message){
+        template <typename T> int send(Actor* dest,T* message,int tag){
 
-            printf("%s ----> %s [%d octets]\n",this->GetName().c_str(),dest->GetName().c_str(),sizeof(*message));
+            //printf("%s ----> %s [%d octets]\n",this->GetName().c_str(),dest->GetName().c_str(),sizeof(*message));
             //Ici encapsuler le message dans un paquet
-            message_t pqt;
-            pqt.data = (Memory) message;
-            pqt.receiver=dest->GetId();
-            pqt.sender  =this->GetId();
-            pqt.tag     =Actor::compteur++;
+            message_t* pqt = new message_t;
+            pqt->data = (Memory) message;
+            pqt->receiver=dest->GetId();
+            pqt->sender  =this->GetId();
+            pqt->tag     = tag;//Actor::compteur++;
 
             dest->actor_message_box.push_front(pqt);
-            return pqt.tag;
+            return pqt->tag;
         }
 
         /**
@@ -134,24 +161,39 @@ namespace Acting{
          * @param tag
          * @return
          */
-        template<typename T> T* receive(int tag){
-            std::cout << "Receiving message tag: "<< tag << std::endl;
-            for(list<message_t>::iterator it=actor_message_box.begin();it!=actor_message_box.end();it++){
+        template<typename T> int receive(Actor* src,int tag,T* data){
+            //std::cout << "Receiving message tag: "<< tag << std::endl;
+            for(list<message_t*>::iterator it=actor_message_box.begin();it!=actor_message_box.end();it++){
                 
-                if(it->tag==tag){
-                    printf("Message tag : %d == %d, sizof data: %d\n",it->tag,tag,sizeof(* ((T*)(it->data))));
-                    //actor_message_box.remove(m);
+                if(((*it)->tag==tag) && ((*it)->sender==src->GetId())){
 
-                    void* data = malloc(sizeof(* ((T*)(it->data))));
-                    void* ret  = memcpy(data,it->data,sizeof((* ((T*)it->data))));
+                    void* ret  = memcpy((void*)data,(*it)->data,sizeof((* ((T*)(*it)->data))));
                     assert(ret!=NULL);
                     assert(data!=NULL);
-                    return (T*) data;
+
+                    
+                    //Suppression du message de la boite à lettres
+                    delete (*it);
+                    actor_message_box.remove(*it);
+                    
+                    return 0;
                     
                 }
             }
+
+            //Si on arrive ici c'est qu'il n'y a pas de message de la file
+            //Il faut mettre une attente sur condition
+            //Il faudrait que les envoies de messages s'executent dans plusieurs threads
+
+            //Pour faire cela il est nécessaire d'avoir un autre pool de thread qui exécutera
+            //le code d'envoie de message
+            //Un appel à send ne sera pas bloquant
+            //Un appel à recev le sera, parce que il y'aura une attente sur file de message
+
+            //Dans le modèle producteur consommateur send sera une routine de production
+            //recv sera une routine de consommation
             assert(0);
-            return NULL;
+            return 0;
         }
         /**
          * Executer une portion de code

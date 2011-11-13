@@ -118,7 +118,7 @@ template <unsigned int THREAD_COUNT> int Acting::ThreadPool<THREAD_COUNT>::InitP
         Threading::Mutex::init(&__mutex_condition_queue_not_empty[i]);
         Threading::Condition::init(&__condition_queue_not_empty[i]);
         
-        std::printf("Insertion de %d %d\n",(unsigned int)__threads[i],i);
+        //std::printf("Insertion de %d %d\n",(unsigned int)__threads[i],i);
         
         __threads_ids[(unsigned int)__threads[i]]=i;
     }
