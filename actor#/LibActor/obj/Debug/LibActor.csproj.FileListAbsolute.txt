@@ -1,0 +1,5 @@
+c:\documents and settings\maxds\mes documents\visual studio 2010\Projects\LibActor\LibActor\obj\Debug\ResolveAssemblyReference.cache
+c:\documents and settings\maxds\mes documents\visual studio 2010\Projects\LibActor\LibActor\bin\Debug\LibActor.dll
+c:\documents and settings\maxds\mes documents\visual studio 2010\Projects\LibActor\LibActor\bin\Debug\LibActor.pdb
+c:\documents and settings\maxds\mes documents\visual studio 2010\Projects\LibActor\LibActor\obj\Debug\LibActor.dll
+c:\documents and settings\maxds\mes documents\visual studio 2010\Projects\LibActor\LibActor\obj\Debug\LibActor.pdb
