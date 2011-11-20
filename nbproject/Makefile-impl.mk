@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=Actor++
+PROJECTNAME=actor-cpp
 
 # Active Configuration
 DEFAULTCONF=Debug

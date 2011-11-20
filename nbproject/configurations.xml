@@ -15,7 +15,9 @@
                    displayName="Source Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
+      <itemPath>actor_basics.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
+      <itemPath>ping_pong.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -30,6 +32,7 @@
     </logicalFolder>
     <itemPath>Actor.h</itemPath>
     <itemPath>Closures.h</itemPath>
+    <itemPath>Communicator.cpp</itemPath>
     <itemPath>Thread.cpp</itemPath>
     <itemPath>Thread.h</itemPath>
     <itemPath>ThreadPool.h</itemPath>

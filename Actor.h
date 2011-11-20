@@ -66,25 +66,43 @@ namespace Acting{
         
     private:
         /**
+         * Identifiant de l'acteur
          */
-        Id actor_id;
+        Id __actor_id;
         
         /**
+         * Etiquette de l'acteur, a du sens pour l'utilisateur
          */
-        string actor_name;
+        string __actor_name;
 
         /**
+         * Identifiant donné par l'utilisateur
          */
-        Memory actor_stack;
+        Id __user__id;
 
         /**
+         * Zone mémoire stockant la pile de l'acteur
+         * @Attention utilisé dans le cas de l'ordonnancement des acteurs
          */
-        list<message_t*> actor_message_box;
+        Memory __actor_stack;
+
+        /**
+         * La file des messages de l'acteur courant
+         */
+        list<message_t*> __actor_message_box;
+
+        /**
+         * Un compteur utilisé pour générer l'identifant de l'acteur
+         */
+        static Id __compteur;
 
         /**
          * 
+         * @param orig
          */
-        static Id compteur;
+        Threading::Mutex_t __message_box_mutex;
+
+
 
     public:
         /**
@@ -110,12 +128,30 @@ namespace Acting{
          */
         Id GetId();
 
+
+        /**
+         * 
+         * @param id
+         */
+        void SetUserId(Id id){
+            this->__user__id = id;
+        }
+
+
+        /**
+         *
+         * @return
+         */
+        Id GetUserId(){
+            return this->__user__id;
+        }
+
         /**
          *
          * @param name
          */
         void SetName(const string name){
-            this->actor_name=name;
+            this->__actor_name=name;
         }
 
 
@@ -124,7 +160,7 @@ namespace Acting{
          * @return
          */
         string  GetName(){
-            return this->actor_name;
+            return this->__actor_name;
         }
 
         
@@ -133,7 +169,7 @@ namespace Acting{
          * @return
          */
         int GetMessageCount(){
-            return this->actor_message_box.size();
+            return this->__actor_message_box.size();
         }
 
 
@@ -152,7 +188,17 @@ namespace Acting{
             pqt->sender  =this->GetId();
             pqt->tag     = tag;//Actor::compteur++;
 
-            dest->actor_message_box.push_front(pqt);
+            Threading::Mutex::lock(&dest->__message_box_mutex);
+            dest->__actor_message_box.push_front(pqt);
+            
+			#ifdef DEBUG
+			printf("Message box [actor:%d alias:%s size:%d]\n",this->__actor_id,this->__actor_name.c_str(),this->__actor_message_box.size());
+            printf("Message box [actor:%d alias:%s size:%d]\n",dest->__actor_id,dest->__actor_name.c_str(),dest->__actor_message_box.size());
+            #endif
+			
+			Threading::Mutex::unlock(&dest->__message_box_mutex);
+
+            
             return pqt->tag;
         }
 
@@ -163,23 +209,33 @@ namespace Acting{
          */
         template<typename T> int receive(Actor* src,int tag,T* data){
             //std::cout << "Receiving message tag: "<< tag << std::endl;
-            for(list<message_t*>::iterator it=actor_message_box.begin();it!=actor_message_box.end();it++){
-                
-                if(((*it)->tag==tag) && ((*it)->sender==src->GetId())){
-
-                    void* ret  = memcpy((void*)data,(*it)->data,sizeof((* ((T*)(*it)->data))));
-                    assert(ret!=NULL);
-                    assert(data!=NULL);
-
+            //bool message_receved = false;
+            while(true){
+                    Threading::Mutex::lock(&this->__message_box_mutex);
                     
-                    //Suppression du message de la boite à lettres
-                    delete (*it);
-                    actor_message_box.remove(*it);
-                    
-                    return 0;
+                    for(list<message_t*>::iterator it=__actor_message_box.begin();it!=__actor_message_box.end();it++){
+                        if(((*it)->tag==tag) && ((*it)->sender==src->GetId())){
+
+                            //message_receved = true;
+                            void* ret  = memcpy((void*)data,(*it)->data,sizeof((* ((T*)(*it)->data))));
+                            assert(ret!=NULL);
+                            assert(data!=NULL);
+
+
+                            //Suppression du message de la boite à lettres
+                            delete (*it);
+                            
+                            __actor_message_box.remove(*it);
+                            Threading::Mutex::unlock(&this->__message_box_mutex);
+                            return 0;
+
+                    }
                     
                 }
+
+                    Threading::Mutex::unlock(&this->__message_box_mutex);
             }
+            
 
             //Si on arrive ici c'est qu'il n'y a pas de message de la file
             //Il faut mettre une attente sur condition
@@ -228,21 +284,25 @@ namespace Acting{
     };
 
 
-    Id Actor::compteur;
+
+    Id Actor::__compteur;
+    
     /**
      * Constructor
      */
     Actor::Actor(){
-        compteur++;
-        this->actor_id = compteur;
+        __compteur++;
+        this->__actor_id = __compteur;
         this->SetName(string(""));
+        Threading::Mutex::init(&this->__message_box_mutex);
+
     }
 
     /**
      * Destructor
      */
     Actor::~Actor(){
-
+        Threading::Mutex::destroy(&this->__message_box_mutex);
     }
 
 
@@ -254,8 +314,12 @@ namespace Acting{
     }
 
 
+    /**
+     * 
+     * @return
+     */
     Id Actor::GetId(){
-        return this->actor_id;
+        return this->__actor_id;
     }
 }
 
