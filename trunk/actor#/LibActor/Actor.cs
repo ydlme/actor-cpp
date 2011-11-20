@@ -27,7 +27,7 @@ namespace LibActor
         {
             get {
 
-                    if
+                   
                     return Pool.__pool_consumption; 
             }
             
@@ -161,7 +161,7 @@ namespace LibActor
         /// <returns></returns>
         public static Actor Self()
         {
-            return Pool._pool.GetCurrentActor();
+            return Pool.PrudctionPool.GetCurrentActor();
         }
 
         /// <summary>
@@ -221,7 +221,7 @@ namespace LibActor
         /// </summary>
         public void Start()
         {
-            Pool._pool.AddActor(this);   
+            Pool.PrudctionPool.AddActor(this);   
         }
 
 
@@ -250,7 +250,7 @@ namespace LibActor
         /// <returns></returns>
         public int send<T>(int dest, T message, int tag)
         {
-            Actor dest_ =Pool._pool.GetActor(dest);
+            Actor dest_ =Pool.PrudctionPool.GetActor(dest);
             return send<T>(dest_,message,tag);
         }
 

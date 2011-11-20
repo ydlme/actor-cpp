@@ -3,3 +3,8 @@ c:\documents and settings\maxds\mes documents\visual studio 2010\Projects\LibAct
 c:\documents and settings\maxds\mes documents\visual studio 2010\Projects\LibActor\LibActor\bin\Debug\LibActor.pdb
 c:\documents and settings\maxds\mes documents\visual studio 2010\Projects\LibActor\LibActor\obj\Debug\LibActor.dll
 c:\documents and settings\maxds\mes documents\visual studio 2010\Projects\LibActor\LibActor\obj\Debug\LibActor.pdb
+D:\cygwin\home\maxds\actor-cpp\actor#\LibActor\obj\Debug\ResolveAssemblyReference.cache
+D:\cygwin\home\maxds\actor-cpp\actor#\LibActor\obj\Debug\LibActor.dll
+D:\cygwin\home\maxds\actor-cpp\actor#\LibActor\bin\Debug\LibActor.dll
+D:\cygwin\home\maxds\actor-cpp\actor#\LibActor\bin\Debug\LibActor.pdb
+D:\cygwin\home\maxds\actor-cpp\actor#\LibActor\obj\Debug\LibActor.pdb

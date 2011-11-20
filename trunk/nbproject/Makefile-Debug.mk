@@ -34,7 +34,10 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/Thread.o \
-	${OBJECTDIR}/main.o
+	${OBJECTDIR}/Communicator.o \
+	${OBJECTDIR}/main.o \
+	${OBJECTDIR}/actor_basics.o \
+	${OBJECTDIR}/ping_pong.o
 
 
 # C Compiler Flags
@@ -55,21 +58,36 @@ LDLIBSOPTIONS=
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-Debug.mk dist/Debug/Cygwin_4.x-Windows/actor__.exe
+	"${MAKE}"  -f nbproject/Makefile-Debug.mk dist/Debug/Cygwin_4.x-Windows/actor-cpp.exe
 
-dist/Debug/Cygwin_4.x-Windows/actor__.exe: ${OBJECTFILES}
+dist/Debug/Cygwin_4.x-Windows/actor-cpp.exe: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/Cygwin_4.x-Windows
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/actor__ ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/actor-cpp ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/Thread.o: Thread.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/Thread.o Thread.cpp
 
+${OBJECTDIR}/Communicator.o: Communicator.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/Communicator.o Communicator.cpp
+
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
+
+${OBJECTDIR}/actor_basics.o: actor_basics.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/actor_basics.o actor_basics.cpp
+
+${OBJECTDIR}/ping_pong.o: ping_pong.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/ping_pong.o ping_pong.cpp
 
 # Subprojects
 .build-subprojects:
@@ -77,7 +95,7 @@ ${OBJECTDIR}/main.o: main.cpp
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Debug
-	${RM} dist/Debug/Cygwin_4.x-Windows/actor__.exe
+	${RM} dist/Debug/Cygwin_4.x-Windows/actor-cpp.exe
 
 # Subprojects
 .clean-subprojects:
