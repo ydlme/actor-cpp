@@ -45,8 +45,12 @@
   <ItemGroup>
     <Compile Include="A.cs" />
     <Compile Include="B.cs" />
+    <Compile Include="Child.cs" />
     <Compile Include="Client.cs" />
+    <Compile Include="Contrat.cs" />
+    <Compile Include="IEntite.cs" />
     <Compile Include="IInterface.cs" />
+    <Compile Include="Mere.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="samples\Anneau.cs" />
