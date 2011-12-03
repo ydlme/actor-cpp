@@ -117,7 +117,7 @@ namespace Acting{
         Actor(const Actor& orig);
         
         /**
-         * code exécuté par l'acteur
+         * Code qui sera exécuté par l'acteur
          */
         virtual void act()=0;
 
@@ -130,7 +130,7 @@ namespace Acting{
 
 
         /**
-         * 
+         * Assigne un identifiant utilisateur à l'acteur
          * @param id
          */
         void SetUserId(Id id){
@@ -139,7 +139,7 @@ namespace Acting{
 
 
         /**
-         *
+         * L'identifiant utilisateur de cet acteur
          * @return
          */
         Id GetUserId(){
@@ -147,7 +147,7 @@ namespace Acting{
         }
 
         /**
-         *
+         * Assigne un nom à cet acteur
          * @param name
          */
         void SetName(const string name){
@@ -156,7 +156,7 @@ namespace Acting{
 
 
         /**
-         * 
+         * Renvoie le nom de l'acteur
          * @return
          */
         string  GetName(){
@@ -165,7 +165,7 @@ namespace Acting{
 
         
         /**
-         * La taille de la file des messages
+         * La taille de la file des messages de l'acteur
          * @return
          */
         int GetMessageCount(){
@@ -180,7 +180,13 @@ namespace Acting{
          */
         template <typename T> int send(Actor* dest,T* message,int tag){
 
-            //printf("%s ----> %s [%d octets]\n",this->GetName().c_str(),dest->GetName().c_str(),sizeof(*message));
+
+#ifndef LIRE
+#define LIRE
+/*Le code de send doit être exécuté par un autre pool de thread dédidé*/
+#endif
+
+            printf("%s ----> %s [%d octets]\n",this->GetName().c_str(),dest->GetName().c_str(),sizeof(*message));
             //Ici encapsuler le message dans un paquet
             message_t* pqt = new message_t;
             pqt->data = (Memory) message;
@@ -191,26 +197,27 @@ namespace Acting{
             Threading::Mutex::lock(&dest->__message_box_mutex);
             dest->__actor_message_box.push_front(pqt);
             
-			#ifdef DEBUG
-			printf("Message box [actor:%d alias:%s size:%d]\n",this->__actor_id,this->__actor_name.c_str(),this->__actor_message_box.size());
+	    #ifdef DEBUG
+	    printf("Message box [actor:%d alias:%s size:%d]\n",this->__actor_id,this->__actor_name.c_str(),this->__actor_message_box.size());
             printf("Message box [actor:%d alias:%s size:%d]\n",dest->__actor_id,dest->__actor_name.c_str(),dest->__actor_message_box.size());
             #endif
 			
-			Threading::Mutex::unlock(&dest->__message_box_mutex);
+	    Threading::Mutex::unlock(&dest->__message_box_mutex);
 
             
             return pqt->tag;
         }
 
         /**
-         * Attention au thread safe
+         * Immediat receive
          * @param tag
-         * @return
+         * @return 0 si message reçu, sinon -1
          */
-        template<typename T> int receive(Actor* src,int tag,T* data){
-            //std::cout << "Receiving message tag: "<< tag << std::endl;
+        template<typename T>
+        int receive(Actor* src,int tag,T* data){
+            //std::cout << "Receiving message tag: "<< tag << "src: " << src->GetUserId() <<std::endl;
             //bool message_receved = false;
-            while(true){
+            //while(true){
                     Threading::Mutex::lock(&this->__message_box_mutex);
                     
                     for(list<message_t*>::iterator it=__actor_message_box.begin();it!=__actor_message_box.end();it++){
@@ -234,7 +241,7 @@ namespace Acting{
                 }
 
                     Threading::Mutex::unlock(&this->__message_box_mutex);
-            }
+            //}
             
 
             //Si on arrive ici c'est qu'il n'y a pas de message de la file
@@ -248,8 +255,8 @@ namespace Acting{
 
             //Dans le modèle producteur consommateur send sera une routine de production
             //recv sera une routine de consommation
-            assert(0);
-            return 0;
+            //assert(0);
+            return -1;
         }
         /**
          * Executer une portion de code
