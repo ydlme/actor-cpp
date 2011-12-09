@@ -29,7 +29,7 @@ private:
 public:
     Node():Actor()
     {
-        
+        printf("Hello from Actor %d\n",this->GetUserId());
     }
 
 
@@ -61,36 +61,21 @@ public:
         if(this->GetUserId() == 0)
         {
             message = 222;
-            this->send<int>(this->successeur,&message,0);
-            printf("[Actor %d] --%d-----> [Actor %d]\n",this->GetUserId(),message,successeur->GetUserId());
-
+            this->send<int>(this->successeur,&message,this->successeur->GetUserId());
             
-            while(ret!=0)
-                ret =this->receive<int>(this->predeccesseur,0,&message);
-
-            if(ret !=0)
-            {
-                printf("Pas de message\n");
-            }
-            else{
-                printf("Bonjour tout le monde : je viens de recevoir: %d\n",message);
-            }
+            printf("[Actor %d] --%d-----> [Actor %d]\n",this->GetUserId(),message,successeur->GetUserId());
+            
+            ret =this->receive<int>(this->predeccesseur,this->predeccesseur->GetUserId(),&message);
         }
         else
         {
             //Reception du message à partir du prédecesseur
-
-
             ret =-1;
             sleep(1);
+            ret = this->receive<int>(this->predeccesseur,this->predeccesseur->GetUserId(),&message);
+            message++;
+            this->send<int>(this->successeur,&message,this->successeur->GetUserId());
             
-            while(ret!=0)
-                ret = this->receive<int>(this->predeccesseur,0,&message);
-
-            printf("Bonjour tout le monde : je viens de recevoir: %d\n",message);
-            message=10988;
-
-            this->send<int>(this->successeur,&message,0);
             printf("[Actor %d] --%d-----> [Actor %d]\n",this->GetUserId(),message,successeur->GetUserId());
         }
         
@@ -118,24 +103,23 @@ typedef struct {
  */
 int main() {
 
-    const int thread_count =2;
+    const int thread_count =10;
 
-    
-    Acting::Actor::Init();
     /*Initialisation de l'env*/
-    Acting::ThreadPool<thread_count,1>::InitPool();
-
+    Acting::Actor::Init();
+    
     vector<Node> nodes;
     nodes.resize(10);
 
     for(int i=0;i<nodes.size();i++){
+        nodes[i].SetUserId(i);
         nodes[i].SetSuccesseur(&nodes[(i+1)%nodes.size()]);
         nodes[i].SetPredecesseur(&nodes[(i-1)%nodes.size()]);
         nodes[i].SetUserId(i);
     }
 
     for(int i=0;i<nodes.size();i++){
-        Acting::ThreadPool<thread_count,1>::AddItem(&nodes[i]);
+        Acting::Actor::AddItemToPool(&nodes[i]);
     }
 
 
@@ -143,7 +127,8 @@ int main() {
     
     //////////////////////////////////////////////////
     /*Fermeture de l'env*/
-    Acting::ThreadPool<thread_count,1>::FinalizePool();
+    Acting::Actor::Finit();
+    
     return 0;
 }
 

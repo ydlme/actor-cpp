@@ -35,6 +35,35 @@ namespace Acting{
             virtual actor_status run(ARG_T arg)=0;
     } ;
 
+    
+    
+    /**
+     * 
+     */
+    class ThreadPools{
+        
+    public:
+        static void Init(){
+            ThreadPool<10,1>::InitPool();
+            ThreadPool<10,2>::InitPool();
+        }
+        
+        
+        static void Finit(){
+            ThreadPool<10,1>::FinalizePool();
+            ThreadPool<10,2>::FinalizePool();
+        }
+        
+        static void AddToSendingPool(IActor* a){
+            ThreadPool<10,2>::AddItem(a);
+        }
+        
+        static void AddToStandardPool(IActor*a){
+            ThreadPool<10,1>::AddItem(a);
+        }
+    };
+    
+    /********************************************/
     class SenderActor : public virtual IActor{
         
         
@@ -88,6 +117,9 @@ namespace Acting{
 	    Threading::Mutex::unlock(__recver->GetMessageBoxMutex());
         }
     };
+    
+    
+    
     
     /**
      * Toute cette classe doit être thread safe
@@ -160,13 +192,26 @@ namespace Acting{
          }
         
          
-         
+         /**
+          * 
+          */
         static void Init(){
-            ThreadPool<2,0>::InitPool();
+            ThreadPools::Init();
         }
         
+        /**
+         * 
+         */
         static void Finit(){
-            ThreadPool<2,0>::FinalizePool();
+            ThreadPools::Finit();
+        }
+        
+     
+        /**
+         * 
+         */
+        static void AddItemToPool(IActor* a){
+            ThreadPools::AddToStandardPool(a);
         }
         
         
@@ -234,20 +279,24 @@ namespace Acting{
         template <typename T> 
         int send(Actor* dest,T* message,int tag){
             
-            printf("%s ----> %s [%d octets]\n",this->GetName().c_str(),dest->GetName().c_str(),sizeof(*message));
+            
             //Ici encapsuler le message dans un paquet
             message_t* pqt = new message_t;
-            pqt->data = (Memory) message;
-            pqt->receiver=dest->GetId();
-            pqt->sender  =this->GetId();
-            pqt->tag     = tag;//Actor::compteur++;
-
             
-            IActor* sender = new SenderActor(pqt,dest);
+                            
             
-            //Le message sera envoyé
-            ThreadPool<2,0>::AddItem(sender);
+            pqt->data    = message;
+            pqt->receiver=dest->GetUserId();
+            pqt->sender  =this->GetUserId();
+            pqt->tag     = tag;
             
+            Threading::Mutex::lock(&dest->__message_box_mutex);
+            dest->__actor_message_box.push_front(pqt);
+            printf("%s -- %d --> %s [%d octets]\n",this->GetName().c_str(),
+                    (*(int*)pqt->data),dest->GetName().c_str(),sizeof(*message));
+            Threading::Mutex::unlock(&dest->__message_box_mutex);
+            
+           
             
             return pqt->tag;
             
@@ -260,20 +309,27 @@ namespace Acting{
          */
         template<typename T>
         int receive(Actor* src,int tag,T* data){
-            //std::cout << "Receiving message tag: "<< tag << "src: " << src->GetUserId() <<std::endl;
             //bool message_receved = false;
-            //while(true){
+            while(true)
+            {
                     Threading::Mutex::lock(&this->__message_box_mutex);
-                    
                     for(list<message_t*>::iterator it=__actor_message_box.begin();it!=__actor_message_box.end();it++){
+                        
+                        
+                        printf("Looking for tag %d message from actor %d\n",tag,src->GetUserId());
+                        //sleep(1);
+                        printf("sender:%d recever:%d tag:%d Box size:%d\n ",(*it)->sender,(*it)->receiver,(*it)->tag,__actor_message_box.size());
+                        
+                        
                         if(((*it)->tag==tag) && ((*it)->sender==src->GetId())){
-
-                            //message_receved = true;
+       
                             void* ret  = memcpy((void*)data,(*it)->data,sizeof((* ((T*)(*it)->data))));
                             assert(ret!=NULL);
                             assert(data!=NULL);
 
-
+                            
+                            printf("Received from actor %d %d\n",src->GetUserId(),*((int*) data ));
+                           
                             //Suppression du message de la boite à lettres
                             delete (*it);
                             
@@ -286,7 +342,7 @@ namespace Acting{
                 }
 
                     Threading::Mutex::unlock(&this->__message_box_mutex);
-            //}
+            }
             
 
             //Si on arrive ici c'est qu'il n'y a pas de message de la file
