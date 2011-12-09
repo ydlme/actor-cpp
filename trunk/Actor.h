@@ -8,42 +8,22 @@
 #define	ACTOR_H
 
 #include "Thread.h"
+#include "ThreadPool.h"
+
+
 #include "Closures.h"
+
+
 #include <list>
 #include <string.h>
 #include <cassert>
 #include <string>
+#include <cstdio>
 
 
 using namespace std;
 
 namespace Acting{
-
-
-    typedef void* Object;
-    typedef void* Memory;
-    typedef int   Id;
-    typedef int   message_tag;
-
-    /**
-     */
-    enum actor_status{
-        STATUS_SUCCESS,
-        STATUS_FAILLUR,
-    };
-
-    /**
-     */
-    struct message_t{
-        message_tag tag;
-        /**
-         * données contigues
-         */
-        Memory      data;
-        Id          sender;
-        Id          receiver;
-    };
-
 
     /**
      * 
@@ -55,16 +35,72 @@ namespace Acting{
             virtual actor_status run(ARG_T arg)=0;
     } ;
 
-
+    class SenderActor : public virtual IActor{
+        
+        
+    private:
+        message_t* __message;
+        IActor* __recver;
+        
+    public:
+        /**
+         * @param msg
+         * @param recv
+         */
+        SenderActor(message_t* msg,IActor* recv){
+            this->__message = msg;
+            this->__recver  = recv;
+        }
+        
+        
+        
+        
+        
+        /*
+         * 
+         */
+        std::list<message_t*>* GetMessageBox(){
+            return NULL;
+        } 
+        
+        /**
+         * 
+         * @return 
+         */
+        Threading::Mutex_t* GetMessageBoxMutex(){
+           return NULL; 
+        }
+        
+        /**
+         * 
+         */
+        void act(){
+            
+            Threading::Mutex::lock(__recver->GetMessageBoxMutex());
+            
+            
+            __recver->GetMessageBox()->push_front(__message);
+            
+	    #ifdef DEBUG
+            cout << "Je suis dans sender actor"<<endl;    
+            #endif
+			
+	    Threading::Mutex::unlock(__recver->GetMessageBoxMutex());
+        }
+    };
+    
     /**
      * Toute cette classe doit être thread safe
      * Pour la simple raison que des acteurs peuvent créer d'autres acteurs
      * Dans ce cas, les multiples threads doivent se synchroniser sur certaines
      * données static de la class Actor
      */
-    class Actor {
+    class Actor : public virtual IActor{
         
     private:
+        
+        
+        
         /**
          * Identifiant de l'acteur
          */
@@ -97,7 +133,6 @@ namespace Acting{
         static Id __compteur;
 
         /**
-         * 
          * @param orig
          */
         Threading::Mutex_t __message_box_mutex;
@@ -105,13 +140,39 @@ namespace Acting{
 
 
     public:
+    
         /**
-         *
+         * 
+         * @return 
          */
+        std::list<message_t*>* GetMessageBox(){
+            return &__actor_message_box;
+        }
+        
+        
+        
+        /**
+         * 
+         * @return 
+         */
+         Threading::Mutex_t* GetMessageBoxMutex(){
+             return &__message_box_mutex;
+         }
+        
+         
+         
+        static void Init(){
+            ThreadPool<2,0>::InitPool();
+        }
+        
+        static void Finit(){
+            ThreadPool<2,0>::FinalizePool();
+        }
+        
+        
         Actor();
 
         /**
-         *
          * @param orig
          */
         Actor(const Actor& orig);
@@ -121,13 +182,11 @@ namespace Acting{
          */
         virtual void act()=0;
 
-        
         /**
          * L'identifiant de l'acteur
          * @return
          */
         Id GetId();
-
 
         /**
          * Assigne un identifiant utilisateur à l'acteur
@@ -136,8 +195,7 @@ namespace Acting{
         void SetUserId(Id id){
             this->__user__id = id;
         }
-
-
+        
         /**
          * L'identifiant utilisateur de cet acteur
          * @return
@@ -154,7 +212,6 @@ namespace Acting{
             this->__actor_name=name;
         }
 
-
         /**
          * Renvoie le nom de l'acteur
          * @return
@@ -162,30 +219,21 @@ namespace Acting{
         string  GetName(){
             return this->__actor_name;
         }
-
-        
+       
         /**
          * La taille de la file des messages de l'acteur
          * @return
          */
         int GetMessageCount(){
             return this->__actor_message_box.size();
-        }
-
-
-        
+        }  
 
         /**
          * La méthode doit être estampillé
          */
-        template <typename T> int send(Actor* dest,T* message,int tag){
-
-
-#ifndef LIRE
-#define LIRE
-/*Le code de send doit être exécuté par un autre pool de thread dédidé*/
-#endif
-
+        template <typename T> 
+        int send(Actor* dest,T* message,int tag){
+            
             printf("%s ----> %s [%d octets]\n",this->GetName().c_str(),dest->GetName().c_str(),sizeof(*message));
             //Ici encapsuler le message dans un paquet
             message_t* pqt = new message_t;
@@ -194,18 +242,15 @@ namespace Acting{
             pqt->sender  =this->GetId();
             pqt->tag     = tag;//Actor::compteur++;
 
-            Threading::Mutex::lock(&dest->__message_box_mutex);
-            dest->__actor_message_box.push_front(pqt);
             
-	    #ifdef DEBUG
-	    printf("Message box [actor:%d alias:%s size:%d]\n",this->__actor_id,this->__actor_name.c_str(),this->__actor_message_box.size());
-            printf("Message box [actor:%d alias:%s size:%d]\n",dest->__actor_id,dest->__actor_name.c_str(),dest->__actor_message_box.size());
-            #endif
-			
-	    Threading::Mutex::unlock(&dest->__message_box_mutex);
-
+            IActor* sender = new SenderActor(pqt,dest);
+            
+            //Le message sera envoyé
+            ThreadPool<2,0>::AddItem(sender);
+            
             
             return pqt->tag;
+            
         }
 
         /**

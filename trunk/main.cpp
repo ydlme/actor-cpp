@@ -101,6 +101,9 @@ public:
 
 
 
+/**
+ * 
+ */
 typedef struct {
     int x;
     int y;
@@ -110,13 +113,17 @@ typedef struct {
 
 
 
-
+/**
+ * 
+ */
 int main() {
 
-    const int thread_count =6;
+    const int thread_count =2;
 
+    
+    Acting::Actor::Init();
     /*Initialisation de l'env*/
-    Acting::ThreadPool<thread_count>::InitPool();
+    Acting::ThreadPool<thread_count,1>::InitPool();
 
     vector<Node> nodes;
     nodes.resize(10);
@@ -128,7 +135,7 @@ int main() {
     }
 
     for(int i=0;i<nodes.size();i++){
-        Acting::ThreadPool<thread_count>::AddItem(&nodes[i]);
+        Acting::ThreadPool<thread_count,1>::AddItem(&nodes[i]);
     }
 
 
@@ -136,7 +143,7 @@ int main() {
     
     //////////////////////////////////////////////////
     /*Fermeture de l'env*/
-    Acting::ThreadPool<thread_count>::FinalizePool();
+    Acting::ThreadPool<thread_count,1>::FinalizePool();
     return 0;
 }
 
