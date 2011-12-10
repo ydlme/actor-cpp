@@ -116,15 +116,33 @@ namespace Acting{
 
 #ifndef REGION_STATIC
 #define REGION_STATIC
-template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Thread                     Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__threads[THREAD_COUNT];
-template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> std::queue<Acting::task_t>                 Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__actors [THREAD_COUNT];
-template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Mutex_t                    Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__mutex_queueus[THREAD_COUNT];
-template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> std::map<unsigned int , unsigned int>      Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__threads_ids;
-template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> int                                   Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__elected_thread;
-template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Mutex_t                    Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__mutex_stdout;
-template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Mutex_t                    Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__mutex_map;
-template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Vcondition                 Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__condition_queue_not_empty[THREAD_COUNT];
-template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Mutex_t                    Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__mutex_condition_queue_not_empty[THREAD_COUNT];
+template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Thread                     
+Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__threads[THREAD_COUNT];
+
+template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> std::queue<Acting::task_t>                 
+Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__actors [THREAD_COUNT];
+
+template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Mutex_t                    
+Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__mutex_queueus[THREAD_COUNT];
+
+template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> std::map<unsigned int , unsigned int>      
+Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__threads_ids;
+
+
+template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> int                                   
+Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__elected_thread;
+
+template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Mutex_t                    
+Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__mutex_stdout;
+
+template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Mutex_t                   
+Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__mutex_map;
+
+template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Vcondition                 
+Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__condition_queue_not_empty[THREAD_COUNT];
+
+template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Mutex_t                    
+Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__mutex_condition_queue_not_empty[THREAD_COUNT];
 #endif
 
 
@@ -134,7 +152,8 @@ template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Mutex_t   
 /**
  * Methode doit être parametrée
  */
-template <unsigned int THREAD_COUNT,unsigned int POOL_ID> inline int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::ElectThread(){
+template <unsigned int THREAD_COUNT,unsigned int POOL_ID> 
+inline int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::ElectThread(){
    return (__elected_thread+1) % THREAD_COUNT;
 }
 
@@ -142,7 +161,8 @@ template <unsigned int THREAD_COUNT,unsigned int POOL_ID> inline int Acting::Thr
 /**
  * Initiatialisation du pool de thread
  */
-template <unsigned int THREAD_COUNT,unsigned int POOL_ID> int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::InitPool(){
+template <unsigned int THREAD_COUNT,unsigned int POOL_ID> 
+int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::InitPool(){
 
     __elected_thread = 0;
 
@@ -170,7 +190,8 @@ template <unsigned int THREAD_COUNT,unsigned int POOL_ID> int Acting::ThreadPool
 /**
  * Fermeture du pool de thread
  */
-template <unsigned int THREAD_COUNT,unsigned int POOL_ID> int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::FinalizePool(){
+template <unsigned int THREAD_COUNT,unsigned int POOL_ID> 
+int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::FinalizePool(){
 
     for(int i =0;i<THREAD_COUNT;i++){
         Threading::join_thread(__threads[i]);
@@ -186,7 +207,8 @@ template <unsigned int THREAD_COUNT,unsigned int POOL_ID> int Acting::ThreadPool
 /**
  * Ajout d'une tâche dans le pool de thread
  */
-template <unsigned int THREAD_COUNT,unsigned int POOL_ID> int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::AddItem(IActor* a){
+template <unsigned int THREAD_COUNT,unsigned int POOL_ID> 
+int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::AddItem(IActor* a){
     task_t new_task;
     new_task.__candidat = a;
     //new_task.actor_id   = a->GetId();
@@ -213,7 +235,8 @@ template <unsigned int THREAD_COUNT,unsigned int POOL_ID> int Acting::ThreadPool
 /*
  * Code exécuté par chaque thread du pool
  */
-template <unsigned int THREAD_COUNT,unsigned int POOL_ID> int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::Loop(){
+template <unsigned int THREAD_COUNT,unsigned int POOL_ID> 
+int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::Loop(){
 
     Threading::Mutex::lock(&__mutex_map);
     unsigned tid = __threads_ids[Threading::get_thread_id()];
@@ -245,7 +268,7 @@ template <unsigned int THREAD_COUNT,unsigned int POOL_ID> int Acting::ThreadPool
                     Threading::Mutex::unlock(&__mutex_queueus[tid]);
 
                     //Execute le code de l'acteur
-                    t.__candidat->act();
+                    t.__candidat->Act();
 
                     //tester si t est un acteur d'envoie, si c'est le cas, le liberer
 

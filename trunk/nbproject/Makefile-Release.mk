@@ -36,9 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/Thread.o \
 	${OBJECTDIR}/Communicator.o \
-	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/actor_basics.o \
-	${OBJECTDIR}/ping_pong.o
+	${OBJECTDIR}/main.o
 
 
 # C Compiler Flags
@@ -79,16 +77,6 @@ ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
-
-${OBJECTDIR}/actor_basics.o: actor_basics.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/actor_basics.o actor_basics.cpp
-
-${OBJECTDIR}/ping_pong.o: ping_pong.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/ping_pong.o ping_pong.cpp
 
 # Subprojects
 .build-subprojects:
