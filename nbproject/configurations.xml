@@ -12,9 +12,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>actor_basics.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
-      <itemPath>ping_pong.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -39,9 +37,12 @@
     <conf name="Debug" type="1">
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
-        <compilerSet>Cygwin_4.x|Cygwin_4.x</compilerSet>
+        <compilerSet>GNU|GNU</compilerSet>
       </toolsSet>
       <compileType>
+        <ccTool>
+          <commandLine>-lpthread</commandLine>
+        </ccTool>
       </compileType>
     </conf>
     <conf name="Release" type="1">
