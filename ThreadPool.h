@@ -16,9 +16,10 @@
 
 
 
-namespace Acting{
-
-    
+namespace Acting
+{
+#ifndef STRUCT_TASK_T
+#define STRUCT_TASK_T
     /**
      * 
      */
@@ -28,9 +29,14 @@ namespace Acting{
         //Id actor_id;
         Threading::Thread tid;        
     } task_t;
+#endif 
     
+#ifndef CLASS_THREAD_POOL
+#define CLASS_THREAD_POOL
 
-   /*Ajouter un parametre template identifiant le thread pool*/
+    /**
+     * Une classe implémentant un pool de threads
+     */
     template <unsigned  int THREAD_COUNT,unsigned int POOL_ID> 
     class ThreadPool {
     public:
@@ -109,9 +115,8 @@ namespace Acting{
         static int Loop();
         
     };
+#endif   
 }
-
-
 
 
 #ifndef REGION_STATIC
@@ -145,10 +150,8 @@ template <unsigned int THREAD_COUNT ,unsigned int POOL_ID> Threading::Mutex_t
 Acting::ThreadPool<THREAD_COUNT,POOL_ID>::__mutex_condition_queue_not_empty[THREAD_COUNT];
 #endif
 
-
-
-
-
+#ifndef CLASS_THREAD_POOL_IMPL
+#define CLASS_THREAD_POOL_IMPL
 /**
  * Methode doit être parametrée
  */
@@ -238,11 +241,17 @@ int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::AddItem(IActor* a){
 template <unsigned int THREAD_COUNT,unsigned int POOL_ID> 
 int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::Loop(){
 
+    /**
+     *Recuperation de l'identifiant du thread courant
+     **/
     Threading::Mutex::lock(&__mutex_map);
     unsigned tid = __threads_ids[Threading::get_thread_id()];
     Threading::Mutex::unlock(&__mutex_map);
-
-
+    /*********************************************************/
+    
+    /**
+     * Boucle d'exécution du thread courant 
+     */
     while(true){
         //Ici on endort le thread tid sur la variable de condition
         //__actors[tid].empty()==true
@@ -263,13 +272,21 @@ int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::Loop(){
         //Le thread va consommer sa file des travaux
         while(!__actors[tid].empty()){
                     Threading::Mutex::lock(&__mutex_queueus[tid]);
+                    
+                    /**
+                     * Ici, au lieu de choisir directement l'acteur en tete,
+                     * essayer de choisir l'acteur qui est d'envoie
+                     */
                     task_t t = __actors[tid].front();
+                    
+                    
                     __actors[tid].pop();
                     Threading::Mutex::unlock(&__mutex_queueus[tid]);
 
                     //Execute le code de l'acteur
                     t.__candidat->Act();
 
+                    
                     //tester si t est un acteur d'envoie, si c'est le cas, le liberer
 
                     //Mettre en place un mécanisme qui lorsque le thread exécutant l'acteur t.__candidiat
@@ -279,7 +296,7 @@ int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::Loop(){
         Threading::Mutex::unlock(&__mutex_condition_queue_not_empty[tid]);
     }
 }
-
+#endif
 
 #endif	/* THREADPOOL_H */
 

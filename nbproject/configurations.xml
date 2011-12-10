@@ -28,6 +28,8 @@
     <itemPath>Actor.h</itemPath>
     <itemPath>Closures.h</itemPath>
     <itemPath>Communicator.cpp</itemPath>
+    <itemPath>ProxyActor.cpp</itemPath>
+    <itemPath>ProxyActor.h</itemPath>
     <itemPath>Thread.cpp</itemPath>
     <itemPath>Thread.h</itemPath>
     <itemPath>ThreadPool.h</itemPath>
