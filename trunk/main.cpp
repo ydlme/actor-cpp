@@ -70,7 +70,8 @@ public:
     /**
      * Methode exécuté par le processus concurrent
      */
-    virtual void act()
+protected:
+    void act()
     {
         int message = 100;
         int ret =-1;

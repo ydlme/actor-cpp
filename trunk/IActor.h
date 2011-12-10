@@ -29,6 +29,15 @@ enum actor_status{
     STATUS_FAILLUR,
 };
 
+enum actor_stat{
+    STAT_SLEEP,
+    STAT_EXEC,
+    STAT_READY,
+    STAT_SENDING,
+    STAT_RECVING
+};
+
+
 struct message_t{
     message_tag tag;
     
@@ -40,9 +49,10 @@ struct message_t{
 
 class IActor {
 public:
-    virtual void Act()=0;
+    virtual  void                   Act()=0;
     virtual  std::list<message_t*>* GetMessageBox()=0;
     virtual  Threading::Mutex_t*    GetMessageBoxMutex()=0;
+    virtual  actor_stat             GetStat()=0;
 };
 
 #endif	/* IACTOR_H */
