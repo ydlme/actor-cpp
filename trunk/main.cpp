@@ -149,7 +149,7 @@ int main() {
     
     for(int i=0;i<nodes.size();i++){
         printf("actor:%d succ:%d pred:%d\n",nodes[i].GetUserId(),nodes[i].GetSuccessor(),nodes[i].GetPredecessor());
-        Acting::Actor::AddItemToPool(&nodes[i]);
+        nodes[i].start();
     }
 
 
