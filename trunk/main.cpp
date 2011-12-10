@@ -33,6 +33,23 @@ public:
     }
 
 
+    
+    /**
+     * 
+     * @return 
+     */
+    Id GetPredecessor(){
+        return this->predeccesseur->GetUserId();
+    }
+    
+    /**
+     * 
+     * @return 
+     */
+    Id GetSuccessor(){
+        return  this->successeur->GetUserId();
+    }
+    
     /**
      * 
      * @param succ
@@ -61,22 +78,30 @@ public:
         if(this->GetUserId() == 0)
         {
             message = 222;
-            this->send<int>(this->successeur,&message,this->successeur->GetUserId());
             
             printf("[Actor %d] --%d-----> [Actor %d]\n",this->GetUserId(),message,successeur->GetUserId());
+            this->send<int>(this->successeur,&message,1);
             
-            ret =this->receive<int>(this->predeccesseur,this->predeccesseur->GetUserId(),&message);
+            ret =this->receive<int>(this->predeccesseur,22,&message);
         }
         else
         {
             //Reception du message à partir du prédecesseur
             ret =-1;
-            sleep(1);
-            ret = this->receive<int>(this->predeccesseur,this->predeccesseur->GetUserId(),&message);
+            int tag =1;
+            
+            if(this->GetUserId()==9){
+                tag =22;
+            }
+           
+            ret = this->receive<int>(this->predeccesseur,1,&message);
             message++;
-            this->send<int>(this->successeur,&message,this->successeur->GetUserId());
             
             printf("[Actor %d] --%d-----> [Actor %d]\n",this->GetUserId(),message,successeur->GetUserId());
+       
+            
+            this->send<int>(this->successeur,&message,tag);
+       
         }
         
         printf("[Actor %d] %d\n",GetUserId(),message);
@@ -103,8 +128,6 @@ typedef struct {
  */
 int main() {
 
-    const int thread_count =10;
-
     /*Initialisation de l'env*/
     Acting::Actor::Init();
     
@@ -114,11 +137,18 @@ int main() {
     for(int i=0;i<nodes.size();i++){
         nodes[i].SetUserId(i);
         nodes[i].SetSuccesseur(&nodes[(i+1)%nodes.size()]);
-        nodes[i].SetPredecesseur(&nodes[(i-1)%nodes.size()]);
+        if(i==0){
+            nodes[i].SetPredecesseur(&nodes[nodes.size()-1]);
+        }
+        else
+            nodes[i].SetPredecesseur(&nodes[(i-1)%nodes.size()]);
+        
         nodes[i].SetUserId(i);
     }
 
+    
     for(int i=0;i<nodes.size();i++){
+        printf("actor:%d succ:%d pred:%d\n",nodes[i].GetUserId(),nodes[i].GetSuccessor(),nodes[i].GetPredecessor());
         Acting::Actor::AddItemToPool(&nodes[i]);
     }
 
