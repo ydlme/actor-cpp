@@ -137,6 +137,7 @@ int main() {
     for(int i=0;i<nodes.size();i++){
         nodes[i].SetUserId(i);
         nodes[i].SetSuccesseur(&nodes[(i+1)%nodes.size()]);
+        
         if(i==0){
             nodes[i].SetPredecesseur(&nodes[nodes.size()-1]);
         }

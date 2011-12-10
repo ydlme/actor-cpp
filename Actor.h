@@ -29,6 +29,9 @@ using namespace std;
 
 namespace Acting{
   
+    
+#ifndef THREADPOOLS_CLASS
+#define THREADPOOLS_CLASS
   /**
    * Ensemble de pools de thread utilisés par les acteurs
    */
@@ -67,6 +70,7 @@ namespace Acting{
       ThreadPool<NB_THREADS,1>::AddItem(a);
     }
   };
+#endif
   
   
 #ifndef CLASS_SENDER_ACTOR
@@ -108,7 +112,7 @@ namespace Acting{
      * Ajoute un message dans la box de l'envoyeur
      */
   protected:
-    void act(){
+    void Act(){
       
       Threading::Mutex::lock(__recver->GetMessageBoxMutex());
       __recver->GetMessageBox()->push_front(__message);
@@ -234,7 +238,21 @@ namespace Acting{
      */
   protected:
     virtual void act()=0;
-
+    
+  public:
+    /**
+     * 
+     */
+    void Act(){
+        //Exécution du code utilisateur 
+        act();
+        
+        //Signale que l'acteur a fini
+        printf("L'acteur %d a fini \n",this->GetUserId());
+        
+    }
+    
+    
   public:
     /**
      * L'identifiant de l'acteur
@@ -356,8 +374,9 @@ namespace Acting{
 		   tag,
 		   src->GetUserId());
 	    
+#ifdef DEBUG
 	    PrintMessageBox();
-            
+#endif
 	    printf("sender:%d recever:%d tag:%d Box size:%d\n ",(*it)->sender,(*it)->receiver,(*it)->tag,__actor_message_box.size());
             
             
@@ -442,6 +461,8 @@ namespace Acting{
 #endif
   
   
+#ifndef CLASS_ACTOR_IMPL
+#define CLASS_ACTOR_IMPL
   Id Actor::__compteur;
   
   /**
@@ -478,7 +499,7 @@ namespace Acting{
   Id Actor::GetId(){
     return this->__actor_id;
   }
-  
+#endif
   
 }
 

@@ -7,13 +7,13 @@ CND_BASEDIR=`pwd`
 CND_BUILDDIR=build
 CND_DISTDIR=dist
 # Debug configuration
-CND_PLATFORM_Debug=GNU-Linux-x86
-CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux-x86
+CND_PLATFORM_Debug=
+CND_ARTIFACT_DIR_Debug=dist/Debug/
 CND_ARTIFACT_NAME_Debug=actor-cpp
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/actor-cpp
-CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
+CND_ARTIFACT_PATH_Debug=dist/Debug//actor-cpp
+CND_PACKAGE_DIR_Debug=dist/Debug//package
 CND_PACKAGE_NAME_Debug=actor-cpp.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/actor-cpp.tar
+CND_PACKAGE_PATH_Debug=dist/Debug//package/actor-cpp.tar
 # Release configuration
 CND_PLATFORM_Release=Cygwin_4.x-Windows
 CND_ARTIFACT_DIR_Release=dist/Release/Cygwin_4.x-Windows

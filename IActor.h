@@ -40,7 +40,7 @@ struct message_t{
 
 class IActor {
 public:
-    virtual void act()=0;
+    virtual void Act()=0;
     virtual  std::list<message_t*>* GetMessageBox()=0;
     virtual  Threading::Mutex_t*    GetMessageBoxMutex()=0;
 };
