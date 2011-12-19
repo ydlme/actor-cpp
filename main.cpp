@@ -96,13 +96,11 @@ protected:
 	if(this->GetUserId()==9){
 	  tag =22;
 	}
-        
+	
 	ret = this->receive<int>(this->predeccesseur,1,&message);
 	message++;
-        
 	printf("[Actor %d] --%d-----> [Actor %d]\n",this->GetUserId(),message,successeur->GetUserId());
 	
-        
 	this->send<int>(this->successeur,&message,tag);
 	
       }
