@@ -11,6 +11,7 @@
 #include "Actor.h"
 #include "Closures.h"
 #include "ThreadPool.h"
+
 #include <stack>
 #include <algorithm>
 #include <assert.h>
@@ -19,7 +20,8 @@ using namespace std;
 
 /*
  * Une classe Node qui permet de mettre en place
- * une topologie de communication sur des aspects concurrents
+ * une topologie de communication sur des 
+ * aspects concurrents
  */
 class Node : public Acting::Actor{
 private:
