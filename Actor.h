@@ -91,152 +91,141 @@ class ProxyActor {
 
 #ifndef CLASS_SENDER_ACTOR
 #define CLASS_SENDER_ACTOR
+/**
+ * Un acteur utilisé avec envoi asynchrone
+ */
+ class SenderActor : public virtual IActor{
+  
+ private:
+  message_t* __message;
+  IActor* __recver;
+  actor_stat __stat;
+  
+ public:
+  
+  actor_stat GetStat(){
+    return  __stat;
+  }
+  
   /**
-   * Un acteur utilisé avec envoi asynchrone
+   * @param msg
+   * @param recv
    */
-  class SenderActor : public virtual IActor{
+  SenderActor(message_t* msg,IActor* recv){
+    this->__message = msg;
+    this->__recver  = recv;
+    this->__stat    = STAT_SLEEP;
+  }   
+  /**
+   * Renvoie NULL
+   */
+  std::list<message_t*>* GetMessageBox(){
+    return NULL;
+  } 
     
-  private:
-    message_t* __message;
-    IActor* __recver;
-    actor_stat __stat;
+  /**
+   * Ne pas utiliser
+   * @return NULL
+   */
+  Threading::Mutex_t* GetMessageBoxMutex(){
+    return NULL; 
+  }
+  
+  /**
+   * Ajoute un message dans la box de l'envoyeur
+   */
+ protected:
+  void Act(){
     
-  public:
-      
-      actor_stat GetStat(){
-          return  __stat;
-      }
-      
-    /**
-     * @param msg
-     * @param recv
-     */
-    SenderActor(message_t* msg,IActor* recv){
-      this->__message = msg;
-      this->__recver  = recv;
-      this->__stat    = STAT_SLEEP;
-    }   
-    /**
-     * Renvoie NULL
-     */
-    std::list<message_t*>* GetMessageBox(){
-      return NULL;
-    } 
+    Threading::Mutex::lock(__recver->GetMessageBoxMutex());
+    __recver->GetMessageBox()->push_front(__message);
     
-    /**
-     * Ne pas utiliser
-     * @return NULL
-     */
-    Threading::Mutex_t* GetMessageBoxMutex(){
-      return NULL; 
-    }
-    
-    /**
-     * Ajoute un message dans la box de l'envoyeur
-     */
-  protected:
-    void Act(){
-      
-      Threading::Mutex::lock(__recver->GetMessageBoxMutex());
-      __recver->GetMessageBox()->push_front(__message);
-      
 #ifdef DEBUG
-      cout << "Je suis dans sender actor"<<endl;    
+    cout << "Je suis dans sender actor"<<endl;    
 #endif
-      
-      Threading::Mutex::unlock(__recver->GetMessageBoxMutex());
-    }
-  };
+    
+    Threading::Mutex::unlock(__recver->GetMessageBoxMutex());
+  }
+};
 #endif
-
-  
-  
-  
+ 
+ 
+ 
+ 
 #ifndef CLASS_ACTOR
 #define CLASS_ACTOR
     
-  /**
-   * Toute cette classe doit être thread safe
-   * Pour la simple raison que des acteurs peuvent créer d'autres acteurs
-   * Dans ce cas, les multiples threads doivent se synchroniser sur certaines
-   * données static de la class Actor
-   */
-  class Actor : public virtual IActor{ 
-      
-      friend int ProxyActor::SendMessage(message_t* m,Actor* dest);
-      
-  private:
+/**
+ * Toute cette classe doit être thread safe
+ * Pour la simple raison que des acteurs peuvent créer d'autres acteurs
+ * Dans ce cas, les multiples threads doivent se synchroniser sur certaines
+ * données static de la class Actor
+ */
+ class Actor : public virtual IActor{ 
+  
+  friend int ProxyActor::SendMessage(message_t* m,Actor* dest);
+  
+ private:
 #ifndef REGION_MEMBRES
 #define REGION_MEMBRES
-    /**
-     * Identifiant de l'acteur
-     */
-    Id __actor_id;
-    
-    /**
-     * Etat de l'acteur
-     */
-    actor_stat __stat;
-    
-    /**
-     * Sauvgarde
-     */
-    actor_stat __saved_stat;
-    
-    /**
-     * Etiquette de l'acteur, a du sens pour l'utilisateur
-     */
-    string __actor_name;
-    
-    /**
-     * Identifiant donné par l'utilisateur
-     */
-    Id __user__id;
-    
-    /**
-     * Zone mémoire stockant la pile de l'acteur
-     * @Attention utilisé dans le cas de l'ordonnancement des acteurs
-     */
-    Memory __actor_stack;
-    
-    /**
-     * La file des messages de l'acteur courant
-     */
-    list<message_t*> __actor_message_box;
-    
-    
-    /**
-     * Un compteur utilisé pour générer l'identifant de l'acteur
-     */
-    static Id __compteur;
-   
-    /**
-     * Un mutex pour proteger la boite à lettres de l'acteur
-     */
-    Threading::Mutex_t __message_box_mutex;
-  
-    
+  /**
+   * Identifiant de l'acteur
+   */
+  Id __actor_id;
+  /**
+   * Etat de l'acteur
+   */
+  actor_stat __stat;
+  /**
+   * Sauvgarde de l'etat de l'acteur
+   */
+  actor_stat __saved_stat;
+  /**
+   * Etiquette de l'acteur, a du sens pour l'utilisateur
+   */
+  string __actor_name;
+  /**
+   * Identifiant donné par l'utilisateur
+   */
+  Id __user__id;
+  /**
+   * Zone mémoire stockant la pile de l'acteur
+   * @Attention utilisé dans le cas de l'ordonnancement des acteurs
+   */
+  Memory __actor_stack;
+  /**
+   * La file des messages de l'acteur courant
+   */
+  list<message_t*> __actor_message_box;
+  /**
+   * Un compteur partagé utilisé pour générer l'identifant de l'acteur
+   */
+  static Id __compteur;
+  /**
+   * Un mutex pour proteger la boite à lettres de l'acteur
+   */
+  Threading::Mutex_t __message_box_mutex;
 #endif
-    
-    
+  
+  
 #ifndef REGION_METHODES
 #define REGION_METHODES
-  public:
-    /**
-     * 
-     * @return 
-     */
-    std::list<message_t*>* GetMessageBox();
-    /**
-     * Retourne l'adresse de la boite à lettres du thread courant 
-     * @return 
-     */
-    Threading::Mutex_t* GetMessageBoxMutex();
-    
-    /**
-     * 
-     * @return 
-     */
+ public:
+  /**
+   * 
+   * @return adresse de la boite à lettres de l'acteur 
+   */
+  std::list<message_t*>* GetMessageBox();
+  /**
+   *  
+   * @return pointeur sur le mutex protégeant la boite à lettres 
+   */
+  Threading::Mutex_t* GetMessageBoxMutex();
+  
+  /**
+   * 
+   * @return l'etat de l'acteur
+   */
     actor_stat GetStat();
     
     /**
@@ -254,13 +243,11 @@ class ProxyActor {
     /**
      * Construit un acteur par défaut
      */
-    Actor();
-    
+    Actor(); 
     /**
      * @param orig
      */
     Actor(const Actor& orig);
-    
     /**
      * Code qui sera exécuté par l'acteur
      */
@@ -274,7 +261,7 @@ class ProxyActor {
   public:
     /**
      * L'identifiant de l'acteur
-     * @return
+     * @return identifiant de l'acteur
      */
     Id GetId();
     
@@ -413,51 +400,52 @@ class ProxyActor {
   }
   
   std::list<message_t*>* Actor::GetMessageBox(){
-      return &__actor_message_box;
+    return &__actor_message_box;
   }
+  
+  
+  
+  /**
+   * Retourne l'adresse de la boite à lettres du thread courant 
+   * @return 
+   */
+  Threading::Mutex_t* Actor::GetMessageBoxMutex(){
+    return &__message_box_mutex;
+  }
+  
+  
+  /**
+   * Initialise les pools de threads utilisés par la bibliothèque d'acteurs
+   */
+  void Actor::Init(){
+    ThreadPools::Init();
+  }
+  
+  /**
+   * Finalise les pools de threads utilisés par la bibliothèque d'acteurs
+   */
+  void Actor::Finit(){
+    ThreadPools::Finit();
+  }
+  
+  /**
+   * Ajoute un acteur au pool standard
+   */
+  void Actor::AddItemToPool(IActor* a){
+    ThreadPools::AddToStandardPool(a);
+  }
+  
+  /**
+   * Méthode exécutée par le thread
+   */
+  void Actor::Act(){
+    //Exécution du code utilisateur 
+    act();
     
-    
-    
-    /**
-     * Retourne l'adresse de la boite à lettres du thread courant 
-     * @return 
-     */
-      Threading::Mutex_t* Actor::GetMessageBoxMutex(){
-          return &__message_box_mutex;
-      }
-    
-    
-    /**
-     * Initialise les pools de threads utilisés par la bibliothèque d'acteurs
-     */
-      void Actor::Init(){
-        ThreadPools::Init();
-      }
-    
-    /**
-     * Finalise les pools de threads utilisés par la bibliothèque d'acteurs
-     */
-      void Actor::Finit(){
-        ThreadPools::Finit();
-      }
-
-    /**
-     * Ajoute un acteur au pool standard
-     */
-      void Actor::AddItemToPool(IActor* a){
-       ThreadPools::AddToStandardPool(a);
-      }
-    
-    /**
-     * Méthode exécutée par le thread
-     */
-    void Actor::Act(){
-        //Exécution du code utilisateur 
-        act();
-        
-        //Signale que l'acteur a fini
-        printf("L'acteur %d a fini \n",this->GetUserId());
-    }
+    //Signale que l'acteur a fini
+    printf("L'acteur %d a fini \n",this->GetUserId());
+    __stat = STAT_ENDED;
+  }
   
     /**
      * 
@@ -507,9 +495,9 @@ class ProxyActor {
       
       for(list<message_t*>::iterator it = __actor_message_box.begin()
 	    ;it!=__actor_message_box.end();it++)
-      {
-	printf("[tag:%d,src:%d,dst:%d data:%d]:: ",(*it)->tag,(*it)->sender,(*it)->receiver,*((int*)(*it)->data)); 
-      }
+	{
+	  printf("[tag:%d,src:%d,dst:%d data:%d]:: ",(*it)->tag,(*it)->sender,(*it)->receiver,*((int*)(*it)->data)); 
+	}
       printf("\n"); 
     }
     
@@ -557,68 +545,68 @@ class ProxyActor {
       int Actor::receive(Actor* src,int tag,T* data){
       //bool message_receved = false;
       
-        this->__saved_stat = __stat;
-        this->__stat = STAT_RECVING;
+      this->__saved_stat = __stat;
+      this->__stat = STAT_RECVING;
       
-          int cpt =0;
-          while(true)
-            {
-              cpt++;
-              Threading::Mutex::lock(&this->__message_box_mutex);
-              for(list<message_t*>::iterator it=__actor_message_box.begin();it!=__actor_message_box.end();it++){
-
-
-                printf("Step [%d] [Actor %d] is looking for a message from [actor %d] with [tag %d]\n",
-                       cpt,
-                       this->GetUserId(),
-                       tag,
-                       src->GetUserId());
-
-    #ifdef DEBUG
-                PrintMessageBox();
-    #endif
-                printf("sender:%d recever:%d tag:%d Box size:%d\n ",(*it)->sender,(*it)->receiver,(*it)->tag,__actor_message_box.size());
-
-
-                if(((*it)->tag==tag) && ((*it)->sender==src->GetUserId())){
-
-                  void* ret  = memcpy((void*)data,(*it)->data,sizeof((* ((T*)(*it)->data))));
-                  assert(ret!=NULL);
-                  assert(data!=NULL);
-
-                  *data = *((T*) ret);
-
-                  printf("Received from actor %d %d\n",src->GetUserId(),(int) (*data) );
-
-                  //Suppression du message de la boite à lettres
-                  delete (*it);
-
-                  __actor_message_box.remove(*it);
-                  Threading::Mutex::unlock(&this->__message_box_mutex);
-                  this->__stat = __saved_stat;
-
-                  return 0; 
-                }    
-              }
-
-              Threading::Mutex::unlock(&this->__message_box_mutex);
-            }
+      int cpt =0;
+      while(true)
+	{
+	  cpt++;
+	  Threading::Mutex::lock(&this->__message_box_mutex);
+	  for(list<message_t*>::iterator it=__actor_message_box.begin();it!=__actor_message_box.end();it++){
+	    
+	    
+	    printf("Step [%d] [Actor %d] is looking for a message from [actor %d] with [tag %d]\n",
+		   cpt,
+		   this->GetUserId(),
+		   tag,
+		   src->GetUserId());
+	    
+#ifdef DEBUG
+	    PrintMessageBox();
+#endif
+	    printf("sender:%d recever:%d tag:%d Box size:%d\n ",(*it)->sender,(*it)->receiver,(*it)->tag,__actor_message_box.size());
+	    
+	    
+	    if(((*it)->tag==tag) && ((*it)->sender==src->GetUserId())){
+	      
+	      void* ret  = memcpy((void*)data,(*it)->data,sizeof((* ((T*)(*it)->data))));
+	      assert(ret!=NULL);
+	      assert(data!=NULL);
+	      
+	      *data = *((T*) ret);
+	      
+	      printf("Received from actor %d %d\n",src->GetUserId(),(int) (*data) );
+	      
+	      //Suppression du message de la boite à lettres
+	      delete (*it);
+	      
+	      __actor_message_box.remove(*it);
+	      Threading::Mutex::unlock(&this->__message_box_mutex);
+	      this->__stat = __saved_stat;
+	      
+	      return 0; 
+	    }    
+	  }
+	  
+	  Threading::Mutex::unlock(&this->__message_box_mutex);
+	}
       
       
-          //Si on arrive ici c'est qu'il n'y a pas de message de la file
-          //Il faut mettre une attente sur condition
-          //Il faudrait que les envoies de messages s'executent dans plusieurs threads
-
-          //Pour faire cela il est nécessaire d'avoir un autre pool de thread qui exécutera
-          //le code d'envoie de message
-          //Un appel à send ne sera pas bloquant
-          //Un appel à recev le sera, parce que il y'aura une attente sur file de message
-
-          //Dans le modèle producteur consommateur send sera une routine de production
-          //recv sera une routine de consommation
-          //assert(0);
-          this->__stat = __saved_stat;
-          return -1;
+      //Si on arrive ici c'est qu'il n'y a pas de message de la file
+      //Il faut mettre une attente sur condition
+      //Il faudrait que les envoies de messages s'executent dans plusieurs threads
+      
+      //Pour faire cela il est nécessaire d'avoir un autre pool de thread qui exécutera
+      //le code d'envoie de message
+      //Un appel à send ne sera pas bloquant
+      //Un appel à recev le sera, parce que il y'aura une attente sur file de message
+      
+      //Dans le modèle producteur consommateur send sera une routine de production
+      //recv sera une routine de consommation
+      //assert(0);
+      this->__stat = __saved_stat;
+      return -1;
     }
     
     
@@ -626,7 +614,7 @@ class ProxyActor {
      * Lance l'exécution de l'acteur
      */
     void Actor::start(){
-        AddItemToPool(this);
+      AddItemToPool(this);
     }
     
     /**
@@ -654,19 +642,19 @@ class ProxyActor {
      * @param fun
      */
     template <typename IN,typename OUT> void Actor::loopWhile(Functional::Function<IN,OUT> &fun, bool& condition){
-        
+      
     }
 #endif
   
 #ifndef CLASS_ACTOR_PROXY_IMPL
 #define CLASS_ACTOR_PROXY_IMPL 
-  /**
-   * 
-   * @param packet
-   * @param dest
-   * @return 
-   */
-  int ProxyActor::SendMessage(message_t* packet, Actor* dest){
+    /**
+     * 
+     * @param packet
+     * @param dest
+     * @return 
+     */
+    int ProxyActor::SendMessage(message_t* packet, Actor* dest){
       
       //ici, tester si dest est un acteur locale, si oui
       
@@ -676,12 +664,8 @@ class ProxyActor {
       
       return 0;
       
-  }
+    }
 #endif
-  
-
-  
 }
-
 #endif	/* ACTOR_H */
 

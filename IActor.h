@@ -34,7 +34,8 @@ enum actor_stat{
     STAT_EXEC,
     STAT_READY,
     STAT_SENDING,
-    STAT_RECVING
+    STAT_RECVING,
+    STAT_ENDED
 };
 
 
