@@ -1,23 +1,18 @@
 /* 
  * File:   main.cpp
  * Author: maxds
- *
  * Created on 4 novembre 2011, 17:14
  */
-
 #include <cstdlib>
 #include <iostream>
-
 #include "Actor.h"
 #include "Closures.h"
 #include "ThreadPool.h"
-
 #include <stack>
 #include <algorithm>
 #include <assert.h>
 
 using namespace std;
-
 /*
  * Une classe Node qui permet de mettre en place
  * une topologie de communication sur des 
@@ -29,49 +24,48 @@ private:
     Acting::Actor* predeccesseur;
    
 public:
-    Node():Actor()
-    {
-        printf("Hello from Actor %d\n",this->GetUserId());
-    }
+  Node():Actor()
+  {
+    printf("Hello from Actor %d\n",this->GetUserId());
+  }
+  
 
-
-    
-    /**
-     * 
-     * @return 
-     */
-    Id GetPredecessor(){
-        return this->predeccesseur->GetUserId();
+  
+  /**
+   * 
+   * @return 
+   */
+  Id GetPredecessor(){
+    return this->predeccesseur->GetUserId();
+  }
+  
+  /**
+   * 
+   * @return 
+   */
+  Id GetSuccessor(){
+    return  this->successeur->GetUserId();
     }
-    
-    /**
-     * 
-     * @return 
-     */
-    Id GetSuccessor(){
-        return  this->successeur->GetUserId();
-    }
-    
-    /**
-     * 
-     * @param succ
-     */
-    void SetSuccesseur(Acting::Actor* succ){
-        this->successeur = succ;
-    }
-
-    /**
-     * 
-     * @param pred
-     */
-    void SetPredecesseur(Acting::Actor* pred){
-        this->predeccesseur = pred;
-    }
-
-
-    /**
-     * Methode exécuté par le processus concurrent
-     */
+  
+  /** 
+   * @param succ
+   */
+  void SetSuccesseur(Acting::Actor* succ){
+    this->successeur = succ;
+  }
+  
+  /**
+   * 
+   * @param pred
+   */
+  void SetPredecesseur(Acting::Actor* pred){
+    this->predeccesseur = pred;
+  }
+  
+  
+  /**
+   * Methode exécuté par le processus concurrent
+   */
 protected:
   void act()
   {
@@ -89,6 +83,7 @@ protected:
       }
     else
       {
+	
 	//Reception du message à partir du prédecesseur
 	ret =-1;
 	int tag =1;
@@ -99,6 +94,9 @@ protected:
 	
 	ret = this->receive<int>(this->predeccesseur,1,&message);
 	message++;
+	
+	sleep(1);
+	
 	printf("[Actor %d] --%d-----> [Actor %d]\n",this->GetUserId(),message,successeur->GetUserId());
 	
 	this->send<int>(this->successeur,&message,tag);
@@ -124,12 +122,8 @@ typedef struct {
 
 
 
-/**
- * 
- */
-int main() {
-  
-  /*Initialisation de l'env*/
+inline void Test(){
+   /*Initialisation de l'env*/
   Acting::Actor::Init();
   
   vector<Node> nodes;
@@ -170,6 +164,77 @@ int main() {
   
   /*Fermeture de l'env*/
   Acting::Actor::Finit();
+}
+
+
+
+
+const int taille = 10;
+actor_context ctxs[taille];
+
+
+/*changement de context*/
+void switch_context(){
+  /*choisir le context à restaurer*/
+  for(int i=0;i<taille;i++){
+    if(ctxs[i].__valide && ctxs[i].__priority == 0){
+      restor_context(&ctxs[i]);
+    }
+  }
+}
+
+/*interruption du thread appelant*/
+void interrupt(int tid){  
+  ctxs[tid].__arg = tid+1;
+  //current_tid = tid+1;
+  save_context(&ctxs[tid]);
+  ctxs[tid].__priority++;
+  if(tid+1<taille){
+    ctxs[tid+1].__arg = tid+1;
+    restor_context(&ctxs[tid+1]);
+  }
+  //switch_context();
+}
+
+
+int tids[4] = {1,2,3,4};
+int current_tid =0;
+
+/**/
+void routine(int tid){
+  
+  bool context_saved=false;
+  
+  /*code de début*/
+  current_tid=tid++;
+  
+ init_routine:
+  if(context_saved)
+    goto code_region;
+  
+  context_saved = true;
+  
+  save_context(&ctxs[tid-1]);
+  
+ code_region:
+  printf("Hello from tid %d\n",current_tid);
+  
+ finit_routine:
+  /*code de fin*/
+  restor_context(&ctxs[tid]);
+  ;
+}
+
+/**/
+int main() 
+{ 
+  for(int i =0;i<taille;i++){
+    ctxs[i].__priority = i;
+    ctxs[i].__valide   = false;
+  }
+  
+  
+  routine(0); 
   return 0;
 }
 

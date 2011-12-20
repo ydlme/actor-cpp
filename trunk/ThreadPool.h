@@ -282,10 +282,21 @@ int Acting::ThreadPool<THREAD_COUNT,POOL_ID>::Loop(){
                     
                     __actors[tid].pop();
                     Threading::Mutex::unlock(&__mutex_queueus[tid]);
-
+		    
+		    //sauvgarder le context du thread ici
+		    actor_context* c = new actor_context;
+		    c->__actor_id = t.__candidat->GetUserId();
+		    
+		    //save_context(c);
+		    //setjmp(c->__ctx);
+		    
+		    //printf("Here is a context switch\n");
+		    
+		    //restor_context(c);
+		    
                     //Execute le code de l'acteur
                     t.__candidat->Act();
-
+		    
                     
                     //tester si t est un acteur d'envoie, si c'est le cas, le liberer
 
