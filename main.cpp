@@ -121,13 +121,14 @@ typedef struct {
 } data_t;
 
 
+#define TAILLE 10
 
 inline void Test(){
    /*Initialisation de l'env*/
   Acting::Actor::Init();
   
   vector<Node> nodes;
-  nodes.resize(10);
+  nodes.resize(TAILLE);
   
   for(int i=0;i<nodes.size();i++){
     nodes[i].SetUserId(i);
@@ -169,7 +170,7 @@ inline void Test(){
 
 
 
-const int taille = 10;
+const int taille = 4;
 actor_context ctxs[taille];
 
 
@@ -197,7 +198,7 @@ void interrupt(int tid){
 }
 
 
-int tids[4] = {1,2,3,4};
+int tids[taille] = {1,2,3,4};
 int current_tid =0;
 
 /**/
@@ -221,20 +222,61 @@ void routine(int tid){
   
  finit_routine:
   /*code de fin*/
-  restor_context(&ctxs[tid]);
-  ;
+ restor_context(&ctxs[tid]);
+ 
 }
 
+void methode_for()
+{
+  for(int i=0;i<8;i++){  
+    printf("hello from ctx %d step %d\n",i,i);
+    //swap();
+  }
+}
+
+
+#include <ucontext.h>
+#include <list>
+
+
+std::list<ucontext_t> __ctxs;
+
+
+/**
+ * 
+ * @return 
+ */
+void* _loop(void *arg){
+    
+    for(int i =0;i<10;i++){
+        
+        ucontext_t uc;
+        getcontext(&uc);
+       __ctxs.push_front(uc);
+        
+        printf("hello from task %d\n",i);
+        
+        
+    }
+}
 /**/
 int main() 
 { 
-  for(int i =0;i<taille;i++){
-    ctxs[i].__priority = i;
-    ctxs[i].__valide   = false;
-  }
-  
-  
-  routine(0); 
-  return 0;
+    //Test();
+    Threading::Thread* threads[10];
+    
+    for(int i =0;i<10;i++)
+       threads[i]=Threading::create_thread(_loop,NULL);
+    
+    for(int i =0;i<10;i++){
+        //ici endormi le thread i
+        //save son context
+        //restorer un autre context
+    }
+    
+    for(int i =0;i<10;i++)
+        Threading::join_thread(*threads[i]);
+    
+    return 0;
 }
 
