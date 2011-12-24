@@ -199,12 +199,7 @@ namespace LibActor
             while (true)
             {
                 __condition_queue_not_empty[thread_queue_id].Wait();
-                
-
-
                 __mutexes__queues[thread_queue_id].WaitOne();
-
-
 
                 //Attention
                 if (__jobs[thread_queue_id].Count != 0)
