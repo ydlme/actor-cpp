@@ -92,6 +92,11 @@ namespace LibActor
         #region fields
         
         /// <summary>
+        /// Context d'exécution de l'acteur
+        /// </summary>
+        private System.Runtime.Remoting.Contexts.Context __actor_context;
+
+        /// <summary>
         /// 
         /// </summary>
         private Job __item = null;
@@ -183,6 +188,7 @@ namespace LibActor
         {
             Pool.PrudctionPool.InitPool();
             Pool.PrudctionPool.startPool();
+            
         }
 
         /// <summary>
@@ -331,7 +337,7 @@ namespace LibActor
 
                 var val = __actor_message_box.Find(message =>((message.__tag == tag) && (message.__src == src.__id) && (message.__dest == __id) && (message.__data.GetType() == typeof(T))));
 
-                if (val!= null)
+                if (val != null)
                 {
                     __actor_message_box.Remove(val);
                     result = (T)val.__data;
@@ -339,9 +345,18 @@ namespace LibActor
                     return 0;
 
                 }
+                else
+                {
+                    //Ici il faut saver le context du thread
+                    this.__mutex_actor_message_box.ReleaseMutex();
+                    this.__actor_context = System.Threading.Thread.CurrentContext;
 
-                this.__mutex_actor_message_box.ReleaseMutex();
-            
+                    //Choisir un autre acteur pour s'executer
+                    //OU alors s'assurer que deux acteurs connectés sont mappés dans des threads
+                    //differents, de la sorte un acteur bloqué sur une operation de reception
+                    //sera débloqué en yieldant
+                    System.Threading.Thread.Yield();
+                }
             }
             return 0;
         }
