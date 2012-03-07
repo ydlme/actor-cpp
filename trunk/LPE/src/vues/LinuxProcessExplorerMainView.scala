@@ -5,12 +5,16 @@ import event._
 import scala.actors._
 import Actor._
 import java.awt.Color
+import java.awt.Font
 /**
  * Classe qui sert de GUI à notre process Explorer
  */
 object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 
   def top = MainFrame
+  
+  val mPresenteur :presenteurs.MainPresenteur=new presenteurs.MainPresenteur
+  
   
   /**
    * 
@@ -21,36 +25,134 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
   }
   
   /**
-   * 
+   * La frame principale de la GUI
    */
   val MainFrame= new MainFrame
   {
   
-    title = "Linux Process Explorer, thanks Scala"
-    val dateLabel = new Label { text= "Last updated: ***"}
+    title = Utils.Constantes.TITLE
+    val dateLabel = new Label { text= Utils.Constantes.LABEL_DATE+"12/12/2012"}
+    
+    /**
+     * Permet de fixer l'unité de mesure de la consommation mémoire
+     */
+    def getUnit()={
+      " (KB)"
+    }
+    
     
     val valuesTable = new Table(
     		getInitalValues,
     		
     		Array(	
-    				domaine.ProcessStatus.User,
-    				domaine.ProcessStatus.PID,
-    				domaine.ProcessStatus.Vm_Data,
-    				domaine.ProcessStatus.Vm_Swap,
-    				domaine.ProcessStatus.Vm_Rss,
-    				domaine.ProcessStatus.Vm_Exe,
-    				domaine.ProcessStatus.Vm_Stk,
-    				domaine.ProcessStatus.Vm_Peak))
+    				domaine.ProcessStatus.User+getUnit(),
+    				domaine.ProcessStatus.PID+getUnit(),
+    				domaine.ProcessStatus.Image,
+    				domaine.ProcessStatus.Vm_Data+getUnit(),
+    				domaine.ProcessStatus.Vm_Swap+getUnit(),
+    				domaine.ProcessStatus.Vm_Rss+getUnit(),
+    				domaine.ProcessStatus.Vm_Exe+getUnit(),
+    				domaine.ProcessStatus.Vm_Stk+getUnit(),
+    				domaine.ProcessStatus.Vm_Peak+getUnit(),
+    				domaine.ProcessStatus.Cpu_Time,
+    				domaine.ProcessStatus.Cpu_Taux,
+    				domaine.ProcessStatus.Threads))
 	    		{
 	      
 	    		  showGrid  = true
 	    		  gridColor = Color.BLUE
+	    		  foreground= Color.BLACK
+	    		  font = new Font("Serif", Font.BOLD, 14)
+	    		  
 	    		}
 
-    val updateButton 	= new Button 	{text = "Update"}
-    val killButton      = new Button    {text = "Kill"  }
-    val processExpLabel = new Label 	{text = "Process in system"}
+
+    /**
+     * Setting the header font style
+     */
+    valuesTable.peer.getTableHeader().setFont(new Font("Serif", Font.BOLD, 12))
     
+    /**
+     * Adding buttons to interaction
+     */
+    val updateButton 	= new Button 	{text = Utils.Constantes.LABEL_UPDATE}
+    val killButton      = new Button    {text = Utils.Constantes.LABEL_KILL  }
+    val processExpLabel = new Label 	{text = Utils.Constantes.LABEL_PROCESS}
+    
+    /**
+     *@BEGIN
+     * Fixe le menu de la GUI
+     */
+    
+    /**
+     * Fichier
+     */
+    menuBar = new MenuBar {     
+	contents += new Menu("Fichier") {         
+			contents += new MenuItem(Action("Nouvelle tâche")
+			{
+			    mPresenteur.startNewTask("bash")
+			})
+			
+			contents += new MenuItem(Action("Quitter") 
+			    { 
+					mPresenteur.exitApp()
+			    }) 
+			}      
+			
+	/**
+	 * Options
+	 */
+	contents += new Menu("Options"){
+	  contents += new CheckMenuItem("Afficher les processus zombie")
+	  contents += new CheckMenuItem("Afficher les processus système")            
+	  contents += new CheckMenuItem("Afficher les processus par groupe")      
+	            
+	  //contents += new MenuItem(Action("Action item") { println(title) }) 
+	  contents += new Separator        
+	  contents += new CheckMenuItem("Afficher les statistiques")       
+	  }      
+	
+	
+    /**
+     * Affichage
+     */
+    contents += new Menu("Affichage"){
+    		  
+    		  contents += new MenuItem("Fréquence rafraichissement")
+			  contents += new RadioMenuItem("Haute")
+    		  contents += new RadioMenuItem("Moyenne")
+    		  contents += new RadioMenuItem("Basse")
+    		  contents += new Separator        
+			  
+			  contents += new MenuItem(Action("Rafraichir") { println(title) }) 
+			  contents += new Separator        
+			  contents += new MenuItem("Unité")
+			  contents += new RadioMenuItem("KB")
+    		  contents += new RadioMenuItem("MB")
+    		  contents += new RadioMenuItem("GB")
+    		  
+			  //contents += new CheckMenuItem("Check me")       
+			  }
+    
+    /**
+     * A propos
+     */
+    contents += new Menu("?"){
+    		  contents += new MenuItem(Action("A propos") { 
+    		    println(title)
+    		    mPresenteur.aPropos()
+    		    }) 
+    		  contents += new MenuItem(Action("Aides")    { println(title) }) 
+    		  
+			  }
+    }		
+			
+    
+    
+    /**
+     * @END
+     * */
 	contents 			= new BoxPanel(Orientation.Vertical)  {
 						  contents += dateLabel
 						  contents += valuesTable
@@ -64,6 +166,9 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 						  }
 	}
 	
+	/**
+	 * Abonnement aux events
+	 */
 	listenTo(updateButton)
 	
 	/**
@@ -77,6 +182,9 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 	    button.enabled = false
 	}
 	
+	/**
+	 * Acteur qui permet de mettre à jour la vue
+	 */
 	val uiUpdater = new Actor 
 	{
 	  def act = {
@@ -99,15 +207,21 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 	def updateTable(value :String)
 	{
 	  
-	  Console.println("Hello from update panlel with row count = "+ valuesTable.rowCount)
+	  
+	  //while(true)
+	  {
+	      //Thread.sleep(1000);
+	      Console.println("Hello from update panel with row count = "+ valuesTable.rowCount)
 	 
-	  val i =0
-	  for (i <- 0 until valuesTable.rowCount){
-	   for(j <- 0 until domaine.ProcessStatus.ColumnCount)
-	   {
-	     valuesTable(i,j)=j
-	   }
+		  var i =0
+		  for (i <- 0 until valuesTable.rowCount){
+		   for(j <- 0 until domaine.ProcessStatus.ColumnCount)
+		   {
+		     valuesTable(i,j)=j
+		   }
 	  }
+	  }
+	  
 	}
   }
   
