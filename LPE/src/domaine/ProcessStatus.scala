@@ -4,6 +4,7 @@ package domaine
 
 object ProcessStatus
 {
+  val Image      ="Nom de l'image"
   val PID 		 ="PID"
   val Vm_Data 	 ="VmData"
   val Vm_Stk	 ="VmStk"
@@ -11,8 +12,11 @@ object ProcessStatus
   val Vm_Peak    ="VmPeak"
   val Vm_Exe     ="VmExe"
   val Vm_Rss     ="VmRss"
+  val Cpu_Time   ="Cpu time"
+  val Cpu_Taux   ="Cpu usage"  
   val User       ="User"
-  val ColumnCount =8
+  val Threads    ="Threads"
+  val ColumnCount =12
 }
 
 /**
