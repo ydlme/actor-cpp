@@ -11,16 +11,18 @@ import java.awt.Font
  */
 object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 
+  
+  
   def top = MainFrame
   
   val mPresenteur :presenteurs.MainPresenteur=new presenteurs.MainPresenteur
-  
+  var valuesTable :Table=null
   
   /**
    * 
    */
   def getInitalValues: Array[Array[Any]] ={
-    val emptyMatrix = new Array[Array[Any]](10,domaine.ProcessStatus.ColumnCount)
+    val emptyMatrix = new Array[Array[Any]](50,domaine.ProcessStatus.ColumnCount)
     emptyMatrix
   }
   
@@ -31,7 +33,9 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
   {
   
     title = Utils.Constantes.TITLE
-    val dateLabel = new Label { text= Utils.Constantes.LABEL_DATE+"12/12/2012"}
+    val dateLabel = new Label { 
+      font= new Font("Serif", Font.BOLD, 14)
+      }
     
     /**
      * Permet de fixer l'unité de mesure de la consommation mémoire
@@ -41,7 +45,7 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
     }
     
     
-    val valuesTable = new Table(
+    valuesTable = new Table(
     		getInitalValues,
     		
     		Array(	
@@ -54,8 +58,8 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
     				domaine.ProcessStatus.Vm_Exe+getUnit(),
     				domaine.ProcessStatus.Vm_Stk+getUnit(),
     				domaine.ProcessStatus.Vm_Peak+getUnit(),
-    				domaine.ProcessStatus.Cpu_Time,
-    				domaine.ProcessStatus.Cpu_Taux,
+    				domaine.ProcessStatus.Cpu_Time+" ms",
+    				domaine.ProcessStatus.Cpu_Taux+ " %",
     				domaine.ProcessStatus.Threads))
 	    		{
 	      
@@ -178,8 +182,9 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 	{
 	  case ButtonClicked(button) =>
 	    /*Ici mettre l'action qui sera déclanchée lors du clique*/
-	    uiUpdater ! "colonne1"
 	    button.enabled = false
+	    uiUpdater ! "ok"
+	    
 	}
 	
 	/**
@@ -191,10 +196,16 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 	    loop
 	    {
 	      react{
-	        case(s:String) => 
-	          					Console.println("Hello from colonne1")
-	          					updateTable("colonne1")
+	        case "ok" => 
+	          					
+	          					val format = "dd/MM/yy H:mm:ss"; 
+	          					val formater = new java.text.SimpleDateFormat( format ); 
+	          					val date = new java.util.Date(); 
+ 
+	        					dateLabel.text= Utils.Constantes.LABEL_DATE+formater.format( date )
+	          					updateTable("ok")
 	          					updateButton.enabled = true
+	          					killButton.enabled 	 = true
 	      }
 	    }
 	  }
@@ -204,24 +215,34 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 	
 	uiUpdater.start()
 	
+	
+	/**
+	 * 
+	 */
+	val looper = new Actor 
+	{
+	  def act = {
+	    
+	    while(true){
+	      
+	      //@TODO, faire un appel au présenteur pour calculer les données
+	      mPresenteur.getDataSource()
+	      uiUpdater ! "ok"
+	    }
+	  }
+	  
+	  //override def scheduler() = new SingleThreadedScheduler
+	}
+	looper.start()
+	
+
+	/**
+	 * 
+	 */
 	def updateTable(value :String)
 	{
-	  
-	  
-	  //while(true)
-	  {
-	      //Thread.sleep(1000);
 	      Console.println("Hello from update panel with row count = "+ valuesTable.rowCount)
-	 
-		  var i =0
-		  for (i <- 0 until valuesTable.rowCount){
-		   for(j <- 0 until domaine.ProcessStatus.ColumnCount)
-		   {
-		     valuesTable(i,j)=j
-		   }
-	  }
-	  }
-	  
+	      mPresenteur.actualiser()
 	}
   }
   

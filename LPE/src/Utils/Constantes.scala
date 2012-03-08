@@ -4,7 +4,7 @@ object Constantes {
 
   val TITLE 			="Linux Process Explorer, thanks Scala"
   val LABEL_DATE 		="Last updated:"
-  val LABEL_UPDATE		="Update"    
-  val LABEL_KILL        ="Kill"
-  val LABEL_PROCESS     ="Process in system"  
+  val LABEL_UPDATE		="Actualiser"    
+  val LABEL_KILL        ="Terminer le processus"
+  val LABEL_PROCESS     ="Processus dans le système"  
 }
