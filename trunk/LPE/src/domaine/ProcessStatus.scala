@@ -23,9 +23,6 @@ object ProcessStatus
  * Classe representant le status d'un processus Linux
  */
 class ProcessStatus (val pid:Int) {
-
-  
-  
   /**
    * Le pid du processus
    */
@@ -92,6 +89,12 @@ class ProcessStatus (val pid:Int) {
    * Peak de mémoire physique
    */
   var VmHWM: Int = 0
+  
+  /**
+   * Nom de l'utilisateur
+   */
+  var User:String=null
+  
   
   /**
    * Affiche une description textuelle du processus
