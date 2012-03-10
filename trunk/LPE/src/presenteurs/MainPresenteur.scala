@@ -7,6 +7,8 @@ class MainPresenteur {
 
   
   
+  private var mDirWalker = new Utils.DirWalker
+  
   /**
    * 
    */
@@ -47,7 +49,7 @@ class MainPresenteur {
    */
   def getDataSource()={
 	mListProcess.clear()
-	Thread.sleep(700)
+	//Thread.sleep(700)
 	/**
 	 * Ici, ouvrir le repertoir /proc/
 	 * pour chaque élément pid de ce repertoire, réaliser
@@ -59,18 +61,31 @@ class MainPresenteur {
 	 * Il suffit que l'uiUpdater réactualise la vue à l'aide 
 	 * de de la source de données mListProcess
 	 */
+	
+	mDirWalker.starkWalk(mListProcess)
+	
+  }
+  
+  
+  /**
+   * 
+   */
+  def pickDataSource()={
+    mListProcess
   }
   
   /**
    * Demande à la vue de se raffraichir
    */
   def actualiser()={
+    
+	  	//Ici parcourir la table ,et inserer les elements de mListProcess
 	  	  var i =0
 		  for (i <- 0 until vues.LinuxProcessExplorerMainView.valuesTable.rowCount){
 		   for(j <- 0 until domaine.ProcessStatus.ColumnCount)
 		   {
 		     compteur = compteur+1
-		     vues.LinuxProcessExplorerMainView.valuesTable(i,j)=compteur+"Kb"
+		     vues.LinuxProcessExplorerMainView.valuesTable(i,j)=compteur+" Kb"
 		   }
 	  }
   }
