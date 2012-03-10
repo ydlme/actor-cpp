@@ -119,14 +119,6 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
   var rdiUniteKb 	  	  :RadioMenuItem=null
   var rdiUniteGb          :RadioMenuItem=null
   var rdiUniteMb          :RadioMenuItem=null
-  var rdis=List(
-		  		rdiFrequenceBasse,
-		  		rdiFrequenceHaute,
-		  		rdiFrequenceMoyenne,
-		  		rdiUniteGb,
-		  		rdiUniteKb,
-		  		rdiUniteMb
-		  		)
   /*@end*/
   
   
@@ -146,6 +138,7 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
   {
   
     title = Utils.Constantes.TITLE
+    preferredSize = new Dimension(800, 600)
     val dateLabel = new Label { 
       font= new Font("Serif", Font.BOLD, 14)
       }
@@ -196,12 +189,8 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
     {text = Utils.Constantes.LABEL_UPDATE;name=Utils.Constantes.BTN_UPDATE}
     val killButton      = new Button    
     {text = Utils.Constantes.LABEL_KILL;name=Utils.Constantes.BTN_KILL}
-    //val processExpLabel = new Label 	{text = Utils.Constantes.LABEL_PROCESS}
-    
-    /**
-     *@BEGIN
-     * Fixe le menu de la GUI
-     */
+    val processExpLabel = new Label 	
+    {text = Utils.Constantes.LABEL_PROCESS+intRafPeriod}
     
     /**
      * Fichier
@@ -286,8 +275,9 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
           contents+= new FlowPanel
           {
             contents+= updateButton
-            //contents+= processExpLabel
             contents+= killButton
+            contents+= processExpLabel
+            
           }
         }
 
@@ -316,14 +306,36 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
             button.name match
             {
               case Utils.Constantes.BTN_UPDATE =>
-              case Utils.Constantes.BTN_KILL   => mPresenteur.killProcess(1111)
-              case "rbfh" => intRafPeriod=1000
-              case "rbfm" => intRafPeriod=10000
-              case "rbfb" => intRafPeriod=60000
-              case "rbum" => strUnite="Mb";intUnite=1024
-              case "rbuk" => strUnite="Kb";intUnite=1
-              case "rbug" => strUnite="Gb";intUnite=1024*1024
               
+              case Utils.Constantes.BTN_KILL   => 
+                {
+                  
+                    val rows=valuesTable.selection.rows
+                    
+                    val pids=valuesTable.model.getValueAt(0,0)
+                	mPresenteur.killProcess(1111)
+                	
+                }
+                
+              //#region dynamic params
+              case "rbfh" => intRafPeriod=1000 
+              				 looper.continue()
+              
+              case "rbfm" => intRafPeriod=5000
+              				 looper.continue()
+
+              case "rbfb" => intRafPeriod=10000 
+              				 looper.continue()
+              
+              case "rbum" => strUnite="Mb"
+            	  			 intUnite=1024
+              
+              case "rbuk" => strUnite="Kb" 
+            	  			 intUnite=1
+              
+              case "rbug" => strUnite="Gb" 
+            	  			 intUnite=1024*1024
+              //#endregion
             }
             Console.println("Btn clicked : "+button.name)
             //button.enabled = false
@@ -352,7 +364,9 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 	          					val date = new java.util.Date(); 
  
 	        					dateLabel.text= Utils.Constantes.LABEL_DATE+formater.format( date )
-	          					updateTable("ok")
+	          					processExpLabel.text=Utils.Constantes.LABEL_PROCESS+intRafPeriod
+            
+	        					updateTable("ok")
 	          					updateButton.enabled = true
 	          					killButton.enabled 	 = true
 	      }
@@ -373,9 +387,7 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 	  def act = {
 	    
 	    while(true){
-	      
 	      Thread.sleep(intRafPeriod)
-	      //@TODO, faire un appel au présenteur pour calculer les données
 	      mPresenteur.getDataSource()
 	      uiUpdater ! "ok"
 	    }
