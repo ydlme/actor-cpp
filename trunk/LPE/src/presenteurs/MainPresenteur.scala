@@ -23,6 +23,10 @@ class MainPresenteur {
     0
   }
   
+  def killProcess(pid:Int)={
+    Console.println("Kill of process "+pid)
+  }
+  
   /**
    * 
    */
@@ -49,7 +53,6 @@ class MainPresenteur {
    */
   def getDataSource()={
 	mListProcess.clear()
-	//Thread.sleep(700)
 	/**
 	 * Ici, ouvrir le repertoir /proc/
 	 * pour chaque élément pid de ce repertoire, réaliser
@@ -61,7 +64,6 @@ class MainPresenteur {
 	 * Il suffit que l'uiUpdater réactualise la vue à l'aide 
 	 * de de la source de données mListProcess
 	 */
-	
 	mDirWalker.starkWalk(mListProcess)
 	
   }
@@ -85,7 +87,8 @@ class MainPresenteur {
 		   for(j <- 0 until domaine.ProcessStatus.ColumnCount)
 		   {
 		     compteur = compteur+1
-		     vues.LinuxProcessExplorerMainView.valuesTable(i,j)=compteur+" Kb"
+		     vues.LinuxProcessExplorerMainView.valuesTable(i,j)=
+		       compteur/vues.LinuxProcessExplorerMainView.intUnite+" "+vues.LinuxProcessExplorerMainView.strUnite
 		   }
 	  }
   }
