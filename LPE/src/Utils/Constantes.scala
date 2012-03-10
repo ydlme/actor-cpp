@@ -6,7 +6,7 @@ object Constantes
   val LABEL_DATE 		="Last updated:"
   val LABEL_UPDATE		="Actualiser"    
   val LABEL_KILL        ="Terminer le(s) processus"
-  val LABEL_PROCESS     ="Processus dans le système" 
+  val LABEL_PROCESS     ="Période de raf: " 
   val BTN_UPDATE		="btnu"
   val BTN_KILL          ="btnk"
 }

@@ -23,8 +23,31 @@ class MainPresenteur {
     0
   }
   
-  def killProcess(pid:Int)={
-    Console.println("Kill of process "+pid)
+  
+  /**
+   * Kill all process on the pids List
+   */
+  def killProcess(pids:List[Int]):Unit={
+    pids.foreach((pid:Int) => {killProcess(pid)})
+  }
+  
+  /**
+   * Kill the process with identifier pid
+   */
+  def killProcess(pid:Int):Unit={
+    
+    val lCommande ="kill -9 "+pid
+    Console.println(lCommande)
+    
+    try
+    {
+      //var rt = Runtime.getRuntime();
+	  //rt.exec("kill -9 ");
+    }
+    catch
+    {
+      case e:Exception => 
+    }
   }
   
   /**
