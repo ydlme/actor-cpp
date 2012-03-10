@@ -100,6 +100,36 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
   
   val mPresenteur :presenteurs.MainPresenteur=new presenteurs.MainPresenteur
   var valuesTable :Table=null
+  var strUnite:String 	="KB"
+  var intUnite:Int      =1
+  var intRafPeriod      =1000
+  
+  /*@start MENU 1*/
+  var cmiZombieProcessItem :CheckMenuItem=null
+  var cmiSystemProcessItem :CheckMenuItem=null
+  var cmiGroupeProcessItem :CheckMenuItem=null
+  var cmiStatsProcessItem 	:CheckMenuItem=null
+  
+  /*@end*/
+  
+  /*@start MENU 2*/
+  var rdiFrequenceHaute	  :RadioMenuItem=null
+  var rdiFrequenceMoyenne :RadioMenuItem=null
+  var rdiFrequenceBasse   :RadioMenuItem=null
+  var rdiUniteKb 	  	  :RadioMenuItem=null
+  var rdiUniteGb          :RadioMenuItem=null
+  var rdiUniteMb          :RadioMenuItem=null
+  var rdis=List(
+		  		rdiFrequenceBasse,
+		  		rdiFrequenceHaute,
+		  		rdiFrequenceMoyenne,
+		  		rdiUniteGb,
+		  		rdiUniteKb,
+		  		rdiUniteMb
+		  		)
+  /*@end*/
+  
+  
   
   /**
    * 
@@ -132,15 +162,15 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
     		getInitalValues,
     		
     		Array(	
-    				domaine.ProcessStatus.User+getUnit(),
-    				domaine.ProcessStatus.PID+getUnit(),
+    				domaine.ProcessStatus.User,
+    				domaine.ProcessStatus.PID,
     				domaine.ProcessStatus.Image,
-    				domaine.ProcessStatus.Vm_Data+getUnit(),
-    				domaine.ProcessStatus.Vm_Swap+getUnit(),
-    				domaine.ProcessStatus.Vm_Rss+getUnit(),
-    				domaine.ProcessStatus.Vm_Exe+getUnit(),
-    				domaine.ProcessStatus.Vm_Stk+getUnit(),
-    				domaine.ProcessStatus.Vm_Peak+getUnit(),
+    				domaine.ProcessStatus.Vm_Data,
+    				domaine.ProcessStatus.Vm_Swap,
+    				domaine.ProcessStatus.Vm_Rss,
+    				domaine.ProcessStatus.Vm_Exe,
+    				domaine.ProcessStatus.Vm_Stk,
+    				domaine.ProcessStatus.Vm_Peak,
     				domaine.ProcessStatus.Cpu_Time+" ms",
     				domaine.ProcessStatus.Cpu_Taux+ " %",
     				domaine.ProcessStatus.Threads))
@@ -162,8 +192,10 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
     /**
      * Adding buttons to interaction
      */
-    val updateButton 	= new Button 	{text = Utils.Constantes.LABEL_UPDATE;name="btnupdate"}
-    val killButton      = new Button    {text = Utils.Constantes.LABEL_KILL;name="btnkill"  }
+    val updateButton 	= new Button 	
+    {text = Utils.Constantes.LABEL_UPDATE;name=Utils.Constantes.BTN_UPDATE}
+    val killButton      = new Button    
+    {text = Utils.Constantes.LABEL_KILL;name=Utils.Constantes.BTN_KILL}
     //val processExpLabel = new Label 	{text = Utils.Constantes.LABEL_PROCESS}
     
     /**
@@ -186,41 +218,45 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 					mPresenteur.exitApp()
 			    }) 
 			}      
-			
-	/**
-	 * Options
-	 */
-	contents += new Menu("Options"){
-	  contents += new CheckMenuItem("Afficher les processus zombie")
-	  contents += new CheckMenuItem("Afficher les processus système")            
-	  contents += new CheckMenuItem("Afficher les processus par groupe")      
-	            
-	  //contents += new MenuItem(Action("Action item") { println(title) }) 
+	
+	/*@start Menu options*/
+	cmiZombieProcessItem = new CheckMenuItem("Afficher les processus zombie")
+	cmiSystemProcessItem = new CheckMenuItem("Afficher les processus système")            
+	cmiGroupeProcessItem = new CheckMenuItem("Afficher les processus par groupe")      
+	cmiStatsProcessItem  = new CheckMenuItem("Afficher les statistiques") 
+	val mutexTypeProcess = new ButtonGroup(cmiGroupeProcessItem,cmiSystemProcessItem,cmiZombieProcessItem)
+    contents += new Menu("Options"){
+	  
+	  contents ++= mutexTypeProcess.buttons
+	
 	  contents += new Separator        
-	  contents += new CheckMenuItem("Afficher les statistiques")       
+	  contents += cmiStatsProcessItem
 	  }      
+	/*@end*/
 	
-	
-    /**
-     * Affichage
-     */
-    contents += new Menu("Affichage"){
+    /* start Menu affichage */
+    rdiFrequenceHaute 	= new RadioMenuItem("Haute"){name="rbfh"}
+    rdiFrequenceMoyenne = new RadioMenuItem("Moyenne"){name="rbfm"}
+    rdiFrequenceBasse 	= new RadioMenuItem("Basse"){name="rbfb"}
+    val mutexFrequence  = new ButtonGroup(rdiFrequenceBasse,rdiFrequenceHaute,rdiFrequenceMoyenne)		  
+    
+    rdiUniteKb = new RadioMenuItem("KB"){name ="rbuk"}
+    rdiUniteMb = new RadioMenuItem("MB"){name ="rbum"}
+    rdiUniteGb = new RadioMenuItem("GB"){name ="rbug"}
+    val mutexUnite = new ButtonGroup(rdiUniteKb,rdiUniteMb,rdiUniteGb)		  
+    
+	contents += new Menu("Affichage"){
     		  
     		  contents += new MenuItem("Fréquence rafraichissement")
-			  contents += new RadioMenuItem("Haute")
-    		  contents += new RadioMenuItem("Moyenne")
-    		  contents += new RadioMenuItem("Basse")
+			  contents += new Separator        
+			  
+    		  contents ++=mutexFrequence.buttons
     		  contents += new Separator        
 			  
-			  contents += new MenuItem(Action("Rafraichir") { println(title) }) 
-			  contents += new Separator        
 			  contents += new MenuItem("Unité")
-			  contents += new RadioMenuItem("KB")
-    		  contents += new RadioMenuItem("MB")
-    		  contents += new RadioMenuItem("GB")
-    		  
-			  //contents += new CheckMenuItem("Check me")       
-			  }
+    		  contents += new Separator        
+			  contents ++=mutexUnite.buttons
+    	}
     
     /**
      * A propos
@@ -258,12 +294,17 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
         tab.pageTab1.content = sp
       }
 
-      /**
-       * Abonnement aux events
-       */
+      /*@start abonement aux buttons*/
       listenTo(updateButton)
       listenTo(killButton)
-
+      listenTo(rdiFrequenceHaute)
+      listenTo(rdiFrequenceBasse)
+      listenTo(rdiFrequenceMoyenne)
+      listenTo(rdiUniteGb)
+      listenTo(rdiUniteKb)
+      listenTo(rdiUniteMb)
+      /*@end*/
+      
       /**
        * Les reaction des buttons
        */
@@ -271,14 +312,25 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
         {
           case ButtonClicked(button) =>
             /*Ici mettre l'action qui sera déclanchée lors du clique*/
+            
+            button.name match
+            {
+              case Utils.Constantes.BTN_UPDATE =>
+              case Utils.Constantes.BTN_KILL   => mPresenteur.killProcess(1111)
+              case "rbfh" => intRafPeriod=1000
+              case "rbfm" => intRafPeriod=10000
+              case "rbfb" => intRafPeriod=60000
+              case "rbum" => strUnite="Mb";intUnite=1024
+              case "rbuk" => strUnite="Kb";intUnite=1
+              case "rbug" => strUnite="Gb";intUnite=1024*1024
+              
+            }
             Console.println("Btn clicked : "+button.name)
-            button.enabled = false
+            //button.enabled = false
             uiUpdater ! "ok"
+            
 
         }
-			
-    
-    
     /**
      * @END
      * */
@@ -322,6 +374,7 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 	    
 	    while(true){
 	      
+	      Thread.sleep(intRafPeriod)
 	      //@TODO, faire un appel au présenteur pour calculer les données
 	      mPresenteur.getDataSource()
 	      uiUpdater ! "ok"

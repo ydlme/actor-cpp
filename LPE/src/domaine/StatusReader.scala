@@ -30,7 +30,7 @@ object StatusReader {
     	  table_symbs+=(tokens(0)->tokens(1))
       }
       catch{
-        case e:Exception => println("Invalid process file")
+        case e:Exception => //println("Invalid process file")
       }
       
     })
