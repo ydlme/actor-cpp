@@ -6,6 +6,89 @@ import scala.actors._
 import Actor._
 import java.awt.Color
 import java.awt.Font
+
+
+
+
+import java.awt.Dimension
+import javax.swing.ImageIcon
+import swing._
+import swing.event._
+import TabbedPane._
+
+
+  class MyPanel extends GridPanel(1,1) {
+
+    val feature ="Feature non disponible encore"
+
+    var pageTab1:Page =null
+
+    val tabbedPane = new TabbedPane() {
+         //val icon = createImageIcon("images/middle.gif")
+
+          val panel1 = new makeTextPanel("Panel #1")
+
+          pageTab1=new Page(
+            this, "Processus", panel1,
+            "Does nothing")
+          {
+            //mnemonic = Key.Key1
+
+          }
+          pages += pageTab1
+
+         val panel2 = new makeTextPanel(feature)
+         pages += new Page(
+               this, "Performances", panel2,
+              "Does twice as much nothing")
+          {
+              //mnemonic = Key.Key2
+            }
+
+          val panel3 = new makeTextPanel(feature)
+          pages += new Page(this, "Mise en réseau", panel3,"Still does nothing")
+           {
+               //mnemonic = Key.Key3
+            }
+
+           val panel4 = new makeTextPanel(feature)
+           {
+               preferredSize = new Dimension(410, 50)
+           }
+           pages += new Page(this, "Utilisateurs", panel4,"Does nothing at all")
+           {
+               //mnemonic = Key.Key4
+           }
+         }
+
+       //Add the tabbed pane to this panel.
+       contents += tabbedPane
+
+       //The following line enables to use scrolling tabs.
+       tabbedPane.tabLayoutPolicy = Layout.Scroll
+
+       // ----------------------------------------
+       class makeTextPanel(text: String) extends GridPanel(1, 1) {
+          val filler = new Label(text) {
+               horizontalAlignment = Alignment.Center
+             }
+           contents += filler
+         }
+
+       /** Returns an ImageIcon, or null if the path was invalid. */
+       def createImageIcon(path: String): ImageIcon = {
+           //val imgURL = TabbedPaneDemo.getClass.getResource(path)
+           //if (imgURL != null) {
+               //return new ImageIcon(imgURL)
+             //} else {
+               //System.err.println("Couldn't find file: " + path)
+               return null
+            //}
+         }
+     }
+
+
+/*------------------------------------------------------------------------*/
 /**
  * Classe qui sert de GUI à notre process Explorer
  */
@@ -66,7 +149,7 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 	    		  showGrid  = true
 	    		  gridColor = Color.BLUE
 	    		  foreground= Color.BLACK
-	    		  font = new Font("Serif", Font.BOLD, 14)
+	    		  font = new Font("MS SANS Serif", Font.CENTER_BASELINE, 12)
 	    		  
 	    		}
 
@@ -79,9 +162,9 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
     /**
      * Adding buttons to interaction
      */
-    val updateButton 	= new Button 	{text = Utils.Constantes.LABEL_UPDATE}
-    val killButton      = new Button    {text = Utils.Constantes.LABEL_KILL  }
-    val processExpLabel = new Label 	{text = Utils.Constantes.LABEL_PROCESS}
+    val updateButton 	= new Button 	{text = Utils.Constantes.LABEL_UPDATE;name="btnupdate"}
+    val killButton      = new Button    {text = Utils.Constantes.LABEL_KILL;name="btnkill"  }
+    //val processExpLabel = new Label 	{text = Utils.Constantes.LABEL_PROCESS}
     
     /**
      *@BEGIN
@@ -150,42 +233,56 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
     		  contents += new MenuItem(Action("Aides")    { println(title) }) 
     		  
 			  }
-    }		
+    
+    
+    }
+    
+    contents = new BoxPanel(Orientation.Vertical)  
+    {
+        contents += dateLabel
+        contents += valuesTable
+        val tab = new MyPanel
+        contents += tab
+        
+        var sp = new BoxPanel(Orientation.Vertical)  
+        {
+          contents+= new ScrollPane(valuesTable)
+          contents+= new FlowPanel
+          {
+            contents+= updateButton
+            //contents+= processExpLabel
+            contents+= killButton
+          }
+        }
+
+        tab.pageTab1.content = sp
+      }
+
+      /**
+       * Abonnement aux events
+       */
+      listenTo(updateButton)
+      listenTo(killButton)
+
+      /**
+       * Les reaction des buttons
+       */
+      reactions +=
+        {
+          case ButtonClicked(button) =>
+            /*Ici mettre l'action qui sera déclanchée lors du clique*/
+            Console.println("Btn clicked : "+button.name)
+            button.enabled = false
+            uiUpdater ! "ok"
+
+        }
 			
     
     
     /**
      * @END
      * */
-	contents 			= new BoxPanel(Orientation.Vertical)  {
-						  contents += dateLabel
-						  contents += valuesTable
-						  contents += new ScrollPane(valuesTable)
-						  
-						  contents += new FlowPanel
-						  {
-						    contents+= updateButton
-						    contents+= processExpLabel
-						    contents+= killButton
-						  }
-	}
-	
-	/**
-	 * Abonnement aux events
-	 */
-	listenTo(updateButton)
-	
-	/**
-	 * Les reaction des buttons
-	 */
-	reactions +=
-	{
-	  case ButtonClicked(button) =>
-	    /*Ici mettre l'action qui sera déclanchée lors du clique*/
-	    button.enabled = false
-	    uiUpdater ! "ok"
-	    
-	}
+    
 	
 	/**
 	 * Acteur qui permet de mettre à jour la vue
@@ -241,7 +338,7 @@ object LinuxProcessExplorerMainView extends SimpleGUIApplication {
 	 */
 	def updateTable(value :String)
 	{
-	      Console.println("Hello from update panel with row count = "+ valuesTable.rowCount)
+	      //Console.println("Hello from update panel with row count = "+ valuesTable.rowCount)
 	      mPresenteur.actualiser()
 	}
   }
